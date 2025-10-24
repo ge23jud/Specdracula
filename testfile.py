@@ -1,0 +1,1 @@
+print(dir(hwp_motor.device))
