@@ -7,6 +7,7 @@ Author
 import numpy as np
 from pylablib.devices import Thorlabs
 import ScopeFoundry as SFT
+import time
 
 
 class ThorlabsKDC101_PRMTZ8(SFT.HardwareModule):
@@ -209,6 +210,8 @@ class ThorlabsKDC101_PRMTZ8(SFT.HardwareModule):
             pos = angle/self.pos_conv
             
             self.device.move_to(pos, channel=1)
+            self.device.wait_for_stop()
+            self.angle.trigger_read()            
             
         except Exception as e:
             self.log.error(f"Error: {e}")
@@ -265,6 +268,21 @@ class ThorlabsKDC101_PRMTZ8(SFT.HardwareModule):
             max_velocity=params[2]  # Keep current velocity
         )
 
+    def read_angle_continuous(self, target_angle):
+        current_angle = self.read_angle()
+        diff = np.abs(target_angle - current_angle)
+        acc = self.read_acceleration()
+        vel = self.read_velocity()
+        if diff <= 10.0:
+            time = np.sqrt(2*diff/acc)
+        else:
+            time = np.sqrt(2*10.0/acc) + (diff - 10.0)/vel
+        
+        update_interval = 0.5
+        for i in range(int(time/update_interval)):
+            self.angle.trigger_read()
+            time.sleep(update_interval)
+
     def read_is_moving(self) -> bool:
         """Check if motor is currently moving."""
         if self.device is None:
@@ -277,7 +295,7 @@ class ThorlabsKDC101_PRMTZ8(SFT.HardwareModule):
             self.log.error('Device not connected')
             return
         try:
-            self.device.home(sync=True, force=True, channel=1)  # Wait for homing to complete
+            self.device.home(sync=True, force=false, channel=1)  # Wait for homing to complete
             self.angle.trigger_read()
         except Exception as e:
             self.log.error(f"Error during homing: {e}")
