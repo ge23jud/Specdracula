@@ -9,7 +9,7 @@ import ScopeFoundry as SFT
 # Hardware components
 from HardwareComponents.thorlabs_powermeter import ThorlabsPowerMeterHW
 from HardwareComponents.arduino_shutter import ArduinoShutterHW
-from HardwareComponents.thorlabs_motors import ThorlabsKDC101
+from HardwareComponents.thorlabs_motors import ThorlabsKDC101_PRMTZ8
 
 def set_initial(param, value):
     """Set initial value and target value of a parameter.
@@ -48,7 +48,7 @@ class SpecDracula(SFT.TurboControl):
         shutter.connect()
 
         # HWP setup
-        hwp_motor = ThorlabsKDC101(name='HWP Rotation')
+        hwp_motor = ThorlabsKDC101_PRMTZ8(name='HWP Rotation')
         _temp = hwp_motor.find_param_by_name('Serial number')
         set_initial(_temp, '27253212')  # Your KDC101 serial number
         hwp_motor.connect()
