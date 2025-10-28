@@ -10,6 +10,7 @@ import ScopeFoundry as SFT
 from HardwareComponents.thorlabs_powermeter import ThorlabsPowerMeterHW
 from HardwareComponents.arduino_shutter import ArduinoShutterHW
 from HardwareComponents.thorlabs_motors import ThorlabsKDC101_PRMTZ8
+from HardwareComponents.piezo_jena_NV403CLE import PiezoJenaNV40_HW
 
 def set_initial(param, value):
     """Set initial value and target value of a parameter.
@@ -52,6 +53,18 @@ class SpecDracula(SFT.TurboControl):
         _temp = hwp_motor.find_param_by_name('Serial number')
         set_initial(_temp, '27253212')  # Your KDC101 serial number
         hwp_motor.connect()
+
+        # Piezo setup
+        piezo_stage = PiezoJenaNV40_HW(name='Piezo stage')
+        _temp = piezo_stage.find_param_by_name('Port')
+        set_initial(_temp, 'ASRL12::INSTR')
+        _temp = piezo_stage.find_param_by_name('Friendly name')
+        set_initial(_temp, "Piezo stage")
+        piezo_stage.connect()
+
+        # print(piezo_stage)
+        # print(piezo_stage.get_all_positions())
+
 
 
 if __name__ == "__main__":

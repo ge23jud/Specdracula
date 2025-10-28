@@ -1,24 +1,31 @@
-import sys
-sys.path.insert(0, 'C:/WSI/turbo')
-import ScopeFoundry as SFT
-from HardwareComponents.thorlabs_motors import ThorlabsKDC101
+import pyvisa
 
+rm = pyvisa.ResourceManager()
 
-def set_initial(param, value):
-    """Set initial value and target value of a parameter.
-    
-    TODO This is a hack, and should be part of ObjectParameter
-    or elsewhere.
-    """
-    if isinstance(param, SFT.PhysicalParameter):
-        param.target_value.setValue(value)
-        param.target_value.setValue(value)
-    param.setValue(value)
-    param.setDefault(value)
+# List of COM ports to try (excluding the ones you know are other devices)
+# ASRL11 is your Arduino shutter, ASRL19 is your PM100
+ports_to_try = ['ASRL12::INSTR', 'ASRL13::INSTR', 'ASRL14::INSTR', 
+                'ASRL15::INSTR', 'ASRL16::INSTR', 'ASRL17::INSTR', 
+                'ASRL18::INSTR', 'ASRL1::INSTR']
 
-hwp_motor = ThorlabsKDC101(name='HWP Rotation')
-_temp = hwp_motor.find_param_by_name('Serial number')
-set_initial(_temp, '27253212')  # Your KDC101 serial number
-hwp_motor.connect()
-
-hwp_motor.write_angle(180)
+for port in ports_to_try:
+    try:
+        print(f"\nTrying {port}...")
+        piezo = rm.open_resource(port)
+        piezo.write_termination = '\r'
+        piezo.read_termination = '\r'
+        piezo.baud_rate = 19200
+        piezo.timeout = 1000
+        
+        # Try to get firmware version (command from your colleague's code)
+        response = piezo.query('ver')
+        print(f"SUCCESS on {port}!")
+        print(f"Response: {response}")
+        piezo.close()
+        break
+    except Exception as e:
+        print(f"Failed on {port}: {e}")
+        try:
+            piezo.close()
+        except:
+            pass

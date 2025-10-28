@@ -29,7 +29,7 @@ class PiezoJenaNV40_HW(SFT.HardwareModule):
     closed_loop_z = SFT.PhysicalParameter('Closed loop', dtype=bool, value=True, parent=channel_z, readonly=True)
     soft_start_z = SFT.PhysicalParameter('Soft start', dtype=bool, value=False, parent=channel_z)
 
-    port = SFT.ObjectParameter('Port', str, value='ASRL3::INSTR', readonly=False)
+    port = SFT.ObjectParameter('Port', str, value='ASRL12::INSTR', readonly=False)
     firmware = SFT.ObjectParameter('Firmware version', str, readonly=True)
     display_light = SFT.PhysicalParameter('Display illumination', float, unit='%',
                                           range=SFT.MinMaxRangeType(min=0, max=100))
