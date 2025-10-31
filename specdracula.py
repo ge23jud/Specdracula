@@ -11,6 +11,9 @@ from HardwareComponents.thorlabs_powermeter import ThorlabsPowerMeterHW
 from HardwareComponents.arduino_shutter import ArduinoShutterHW
 from HardwareComponents.thorlabs_motors import ThorlabsKDC101_PRMTZ8
 from HardwareComponents.piezo_jena_NV403CLE import PiezoJenaNV40_HW
+from HardwareComponents.andor_camera import AndorCCDHW
+from HardwareComponents.andor_spec import AndorSpectrographHW
+
 
 def set_initial(param, value):
     """Set initial value and target value of a parameter.
@@ -62,8 +65,19 @@ class SpecDracula(SFT.TurboControl):
         set_initial(_temp, "Piezo stage")
         piezo_stage.connect()
 
-        # print(piezo_stage)
-        # print(piezo_stage.get_all_positions())
+        ccd_camera = AndorCCDHW(name='AndorCCD')
+        _temp = ccd_camera.find_param_by_name('Friendly name')
+        set_initial(_temp, "Camera")
+        ccd_camera.connect()
+
+        # spec = AndorSpectrographHW(name='AndorSpectrograph')
+        # _temp = spec.find_param_by_name('Friendly name')
+        # set_initial(_temp, "Spectrograph")
+        # _temp = spec.find_param_by_name('No. detector pixels')
+        # set_initial(_temp, 2000)
+        # _temp = spec.find_param_by_name('Detector pixel width')
+        # set_initial(_temp, 15.0e-6)
+
 
 
 

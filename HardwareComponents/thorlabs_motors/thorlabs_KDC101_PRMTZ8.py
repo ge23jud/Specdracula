@@ -2,7 +2,7 @@
 
 Author
 ------
-    Your Name (October 2025)
+    Benjamin Haubmann (October 2025)
 """
 import numpy as np
 from pylablib.devices import Thorlabs
