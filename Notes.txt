@@ -1,0 +1,6 @@
+- name functions called with an action in the UI "on_<object>_<signal>", qt will connect the automatically
+(drawback: function can only be used for that one action)
+
+- use stylesheets to change the appearance of the UI
+
+    background-color: #2B5A78;

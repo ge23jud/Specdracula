@@ -1,0 +1,11 @@
+- photoluminescence: Organisation (module/widget)
+- 2dmap: plot auto range disable
+- 2dmap: connect ROI to inputs
+
+- create XvsY tab 
+- create and code analysis tab
+- ask about Time resolved tab
+
+
+
+

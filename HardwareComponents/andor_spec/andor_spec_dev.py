@@ -8,8 +8,18 @@ Authors
     Nick Metelski
     Alain Dijkstra
 '''
+import os
+import sys
 import logging
 from functools import wraps
+
+# CRITICAL: Add DLL directory to PATH before importing ATSpectrograph
+dll_dir = r"C:\Program Files\Andor SDK\Python\pyAndorSpectrograph\pyAndorSpectrograph\libs\Windows\64"
+os.environ['PATH'] = dll_dir + os.pathsep + os.environ.get('PATH', '')
+
+# Python 3.8+ also needs this for DLL loading
+if hasattr(os, 'add_dll_directory'):
+    os.add_dll_directory(dll_dir)
 
 from pyAndorSpectrograph.spectrograph import ATSpectrograph
 
