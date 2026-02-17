@@ -55,14 +55,14 @@ class AndorSpectrographHW(SFT.HardwareModule):
     detector_pixels = SFT.PhysicalParameter(
         'No. detector pixels',
         dtype=int,
-        value=2000,
+        value=512,
         doc="Number of pixels of the detector in the X direction.",
         range=SFT.MinMaxRangeType(min=0, max=10000)
     )
     detector_pixel_width = SFT.PhysicalParameter(
         'Detector pixel width',
         dtype=float,
-        value=15.0e-6,
+        value=25.0e-6,
         unit='m',
         doc="Width (in X direction) of a detector pixel.",
         range=SFT.MinMaxRangeType(min=0, max=100)

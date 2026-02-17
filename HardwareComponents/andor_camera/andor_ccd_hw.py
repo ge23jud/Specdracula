@@ -292,7 +292,7 @@ class AndorCCDHW(HardwareModule):
         self.ad_channel.write_to_device(list(self.ad_channel.range.keys())[0]).wait(timeout)
         self.preamp_gain.write_to_device(list(self.preamp_gain.range.keys())[0]).wait(timeout)
         self.horizontal_shiftspeed.write_to_device(list(self.horizontal_shiftspeed.range.keys())[0]).wait(timeout)
-        self.vertical_shiftspeed.write_to_device(list(self.vertical_shiftspeed.range.keys())[0]).wait(timeout)
+        #self.vertical_shiftspeed.write_to_device(list(self.vertical_shiftspeed.range.keys())[0]).wait(timeout)
         self.temperature.write_to_device(-80)
         self.temperature_status.trigger_read().wait(timeout)
         self.detector_shape.trigger_read().wait(timeout)

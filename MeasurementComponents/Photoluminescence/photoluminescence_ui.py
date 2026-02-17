@@ -71,25 +71,25 @@ class Ui_PhotoluminescenceWidget(object):
         self.widget_13.setMaximumSize(QSize(16777215, 170))
         self.gridLayout = QGridLayout(self.widget_13)
         self.gridLayout.setObjectName(u"gridLayout")
-        self.pushButton_4 = QPushButton(self.widget_13)
-        self.pushButton_4.setObjectName(u"pushButton_4")
+        self.StopLivePL_PushButton = QPushButton(self.widget_13)
+        self.StopLivePL_PushButton.setObjectName(u"StopLivePL_PushButton")
 
-        self.gridLayout.addWidget(self.pushButton_4, 7, 3, 1, 1)
+        self.gridLayout.addWidget(self.StopLivePL_PushButton, 7, 3, 1, 1)
 
-        self.pushButton_5 = QPushButton(self.widget_13)
-        self.pushButton_5.setObjectName(u"pushButton_5")
+        self.Snapshot_PushButton = QPushButton(self.widget_13)
+        self.Snapshot_PushButton.setObjectName(u"Snapshot_PushButton")
 
-        self.gridLayout.addWidget(self.pushButton_5, 0, 3, 1, 1)
+        self.gridLayout.addWidget(self.Snapshot_PushButton, 0, 3, 1, 1)
 
-        self.pushButton_3 = QPushButton(self.widget_13)
-        self.pushButton_3.setObjectName(u"pushButton_3")
+        self.StartLivePL_PushButton = QPushButton(self.widget_13)
+        self.StartLivePL_PushButton.setObjectName(u"StartLivePL_PushButton")
 
-        self.gridLayout.addWidget(self.pushButton_3, 6, 3, 1, 1)
+        self.gridLayout.addWidget(self.StartLivePL_PushButton, 6, 3, 1, 1)
 
-        self.pushButton_6 = QPushButton(self.widget_13)
-        self.pushButton_6.setObjectName(u"pushButton_6")
+        self.SavePL_PushButton = QPushButton(self.widget_13)
+        self.SavePL_PushButton.setObjectName(u"SavePL_PushButton")
 
-        self.gridLayout.addWidget(self.pushButton_6, 1, 3, 1, 1)
+        self.gridLayout.addWidget(self.SavePL_PushButton, 1, 3, 1, 1)
 
         self.label_13 = QLabel(self.widget_13)
         self.label_13.setObjectName(u"label_13")
@@ -268,10 +268,10 @@ class Ui_PhotoluminescenceWidget(object):
 
     def retranslateUi(self, PhotoluminescenceWidget):
         PhotoluminescenceWidget.setWindowTitle(QCoreApplication.translate("PhotoluminescenceWidget", u"Form", None))
-        self.pushButton_4.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Stop Live PL", None))
-        self.pushButton_5.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Snapshot", None))
-        self.pushButton_3.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Start Live PL", None))
-        self.pushButton_6.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Save PL", None))
+        self.StopLivePL_PushButton.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Stop Live PL", None))
+        self.Snapshot_PushButton.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Snapshot", None))
+        self.StartLivePL_PushButton.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Start Live PL", None))
+        self.SavePL_PushButton.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Save PL", None))
         self.label_13.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Start (\u00b0)", None))
         self.label_7.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Stop (\u00b0)", None))
         self.label_14.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Step (\u00b0)", None))

@@ -1,11 +1,4 @@
-import datetime as dt
+from pyAndorSDK2 import atmcd
 
-def convert_filenumber_to_str(filenumber):
-
-        string = str(filenumber)
-        strlength = len(string)
-        result = "0" * (3-strlength) + string
-        return result
-
-
-print(convert_filenumber_to_str()))
+print("Contents of atmcd module:")
+print(dir(atmcd))

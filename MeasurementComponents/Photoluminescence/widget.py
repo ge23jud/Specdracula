@@ -1,6 +1,7 @@
 from PySide6 import QtCore
 import ScopeFoundry as SFT
-
+import pyqtgraph as pg
+import numpy as np
 from ScopeFoundry import TurboComponentView, connect_widget_to_param
 from .photoluminescence_ui import Ui_PhotoluminescenceWidget
 
@@ -19,11 +20,15 @@ class PhotoluminescenceView(TurboComponentView, Ui_PhotoluminescenceWidget):
         SFT.connect_widget_to_param(self.PsStart_DoubleSpinBox, component.ps_start)
         SFT.connect_widget_to_param(self.PsStop_DoubleSpinBox, component.ps_stop)
         SFT.connect_widget_to_param(self.PsStep_DoubleSpinBox, component.ps_step)
-        #SFT.connect_widget_to_param(self.IntTime_DoubleSpinBox, component.int_time)
+
+        SFT.connect_widget_to_param(self.Snapshot_PushButton, component.single_ActionParam)
+        SFT.connect_widget_to_param(self.StartLivePL_PushButton, component.continuous_ActionParam)
+        SFT.connect_widget_to_param(self.StopLivePL_PushButton, component.interrupt_ActionParam)
 
 
         component.x_label.sigValueChanged.connect(self._on_xlabel_changed)
         component.n_measurements.sigValueChanged.connect(self._on_ps_input_update_nmeasurements_label)
+        component.intensity_counts.sigValueChanged.connect(self._update_plot_single)
         
 
     def setup_plot(self):
@@ -32,6 +37,9 @@ class PhotoluminescenceView(TurboComponentView, Ui_PhotoluminescenceWidget):
         self.plot_widget.setLabel("bottom", "Energy", units="eV")
         self.plot_widget.showGrid(x=True, y=True, alpha=0.2)
         self.plot_widget.getPlotItem().layout.setContentsMargins(10, 0, 0, 20)
+
+        self.spectrum_plotDataItem = self.plot_widget.plot([], [])
+        
 
 
     @QtCore.Slot()
@@ -48,5 +56,13 @@ class PhotoluminescenceView(TurboComponentView, Ui_PhotoluminescenceWidget):
     @QtCore.Slot()
     def _on_ps_input_update_nmeasurements_label(self):
         self.NumMeasurements_Label.setText(str(self.component.n_measurements.value()))
+
+
+    
+    @QtCore.Slot()
+    def _update_plot_single(self):
+        X = self.component.wavelength_nm.value()
+        Y = self.component.intensity_counts.value().flatten()
+        self.spectrum_plotDataItem.setData(x=X, y=Y)
 
     

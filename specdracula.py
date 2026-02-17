@@ -44,10 +44,10 @@ class SpecDracula(SFT.TurboControl):
     def setup(self):
         self.log.info('setup')
         
-        self.dashboard = DashboardModule(name='Dashboard')
-        #xymeasurement = XYMeasurementModule(name="XYMeasurement")
+        dashboard = DashboardModule(name='Dashboard')
+        xymeasurement = XYMeasurementModule(name="XYMeasurement")
         photoluminescence = PhotoluminescenceModule(name="Photoluminescence")
-        self.status = StatusModule(name='Status')
+        status = StatusModule(name='Status')
         map = MapModule(name="2D Map")
 
         # Powermeter setup
@@ -80,32 +80,22 @@ class SpecDracula(SFT.TurboControl):
         # set_initial(_temp, "Piezo stage")
         # piezo_stage.connect()
 
-        # ccd_camera = AndorCCDHW(name='AndorCCD')
-        # # _temp = piezo_stage.find_param_by_name('Port')
-        # # set_initial(_temp, 'ASRL12::INSTR')
-        # _temp = ccd_camera.find_param_by_name('Friendly name')
-        # set_initial(_temp, "Camera")
-        # ccd_camera.connect()
+        ccd_camera = AndorCCDHW(name='AndorCCD')
+        _temp = ccd_camera.find_param_by_name('Friendly name')
+        set_initial(_temp, "Camera")
+        ccd_camera.connect()
 
         spec = AndorSpectrographHW(name='AndorSpectrograph')
         _temp = spec.find_param_by_name('Friendly name')
         set_initial(_temp, "Spectrograph")
-        _temp = spec.find_param_by_name('No. detector pixels')
-        set_initial(_temp, 2000)
-        _temp = spec.find_param_by_name('Detector pixel width')
-        set_initial(_temp, 15.0e-6)
         spec.connect()
+
+        photoluminescence.camera.setValue(ccd_camera)
+        photoluminescence.spectrograph.setValue(spec)
 
 
     def setup_ui(self, main_window):
         self.main_window = main_window
-
-        #self.create_dashboard_dock()
-        #self.create_status_display_dock()
-
-        # replace all 
-        #self.replace_all_custom_widgets()
-
     
 
     def create_dashboard_dock(self):
