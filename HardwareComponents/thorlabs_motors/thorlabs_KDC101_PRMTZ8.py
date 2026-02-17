@@ -211,7 +211,8 @@ class ThorlabsKDC101_PRMTZ8(SFT.HardwareModule):
             
             self.device.move_to(pos, channel=1)
             self.device.wait_for_stop()
-            self.angle.trigger_read()            
+            read_task = self.angle.trigger_read()
+            read_task.wait(timeout=0.2)            
             
         except Exception as e:
             self.log.error(f"Error: {e}")

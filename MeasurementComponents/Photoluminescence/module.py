@@ -6,6 +6,11 @@ from ScopeFoundry import Module, ObjectParameter
 
 class PhotoluminescenceModule(Module):
 
+    # devices
+    camera = SFT.ObjectParameter('Camera', SFT.TurboComponent)
+    spectrograph = SFT.ObjectParameter('Spectrograph', SFT.TurboComponent)
+    hwp = SFT.ObjectParameter("HWP", SFT.TurboComponent)
+
     y_scale = SFT.ObjectParameter("Y scale", dtype=str, value="Linear", range=SFT.ChoiceRangeType(**{"Linear": 0, "Logarithmic": 1}), doc="Y-axis scale type")
     x_label = SFT.ObjectParameter("X Label", dtype=str, value="Energy", range=SFT.ChoiceRangeType(**{"Energy": 0, "Wavelength": 1}), doc="X-label")
     ps_start = SFT.ObjectParameter("Power HWP Start Position", dtype=float, value=0.0, range=SFT.MinMaxRangeType(min=0.0, max=360.0, decimals=2), unit="°" )
@@ -13,17 +18,21 @@ class PhotoluminescenceModule(Module):
     ps_step = SFT.ObjectParameter("Power HWP Step", dtype=float, value=1.0, range=SFT.MinMaxRangeType(min=0.0, max=360.0), unit="°")
     n_measurements = SFT.ObjectParameter("N Measurements", dtype=int, value=0)
 
-    camera = SFT.ObjectParameter('Camera', SFT.TurboComponent)
-    spectrograph = SFT.ObjectParameter('Spectrograph', SFT.TurboComponent)
+
+
+
     extra_timeout = SFT.ObjectParameter('Acquisition timeout', dtype=float, unit='s', value=3.0)
     wavelength_nm = SFT.ObjectParameter('Wavelength', dtype=np.ndarray, unit='nm', value=None, readonly=True)
     intensity_counts = SFT.ObjectParameter('Intensity (counts)', dtype=np.ndarray, value=None, readonly=True)
+    intensity_counts_powerseries = SFT.ObjectParameter("Intensities for Powerseries", dtype=np.ndarray, value=None, readonly=True)
+    intensity_counts_powerseries_complete = SFT.ObjectParameter("Intensities for Powerseries Complete Array", dtype=np.ndarray, value=None, readonly=True)
     repetitions = SFT.ObjectParameter('Repetitions', dtype=int, value=1, readonly=False)
     averaging = SFT.ObjectParameter('Averaging', dtype=bool, value=True, readonly=False)
 
     single_ActionParam = SFT.ActionParameter('Acquire Single')
     continuous_ActionParam = SFT.ActionParameter('Acquire Continuous')
     interrupt_ActionParam = SFT.ActionParameter('Interrupt Acquire')
+    powerseries_ActionParam = SFT.ActionParameter("Run Powerseries")
 
 
 
@@ -38,9 +47,12 @@ class PhotoluminescenceModule(Module):
         '''Connect action parameters to ui buttons'''
         self.task_single = SFT.WorkerTask("Acquire single", self.acquire_single, default_thread_pool=self.thread_pool)
         self.task_continuous = SFT.WorkerTask("Acquire continuous", self.acquire_continuous, default_thread_pool=self.thread_pool)
+        self.task_powerseries = SFT.WorkerTask("Run Powerseries", self.powerseries, default_thread_pool=self.thread_pool)
+
         self.single_ActionParam.sigActivated.connect(lambda: self.task_single.run_on_pool())
         self.continuous_ActionParam.sigActivated.connect(lambda: self.task_continuous.run_on_pool())
         self.interrupt_ActionParam.sigActivated.connect(self.interrupt)
+        self.powerseries_ActionParam.sigActivated.connect(lambda: self.task_powerseries.run_on_pool())
         self._interrupted = False
         #self.file_exporters["HDF files (*.h5)"] = AndorCCDReadoutMeasure.to_hdf
 
@@ -57,7 +69,7 @@ class PhotoluminescenceModule(Module):
 
 
     def acquire_continuous(self):
-        """Acquire a background spectrum.
+        """Acquire a continuous spectrum.
         """
         self._acquire(
             intensity_buffer=self.intensity_counts,
@@ -149,6 +161,31 @@ class PhotoluminescenceModule(Module):
                 _inner()
         else:
             _inner()
+
+
+
+    def powerseries(self):
+        start = self.ps_start.value()
+        stop = self.ps_stop.value()
+        step = self.ps_step.value()
+        hwp = self.hwp.value()
+        spec = self.spectrograph.value()
+        
+        hwp.write_angle(start)
+
+        no_pixels = spec.detector_pixels.value()
+        n = self.n_measurements.value()
+        data = np.empty((n, no_pixels))
+        self.intensity_counts_powerseries_complete.setValue(data)
+        print("Number of Measurements:", self.n_measurements.value())
+        for i in range(self.n_measurements.value()):    
+
+            hwp.write_angle(start + i*step)
+            #print("angle:", start+i*step)
+            self._acquire(self.intensity_counts_powerseries, self.wavelength_nm, self.averaging.value(), False)
+            data[i, :] = self.intensity_counts_powerseries.value().flatten()
+            self.intensity_counts_powerseries_complete.setValue(data)
+
 
 
     @QtCore.Slot()

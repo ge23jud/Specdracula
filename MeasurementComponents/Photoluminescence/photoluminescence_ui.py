@@ -151,19 +151,19 @@ class Ui_PhotoluminescenceWidget(object):
 
         self.gridLayout.addWidget(self.PsStep_DoubleSpinBox, 2, 1, 1, 2)
 
-        self.pushButton = QPushButton(self.widget_13)
-        self.pushButton.setObjectName(u"pushButton")
-        sizePolicy1.setHeightForWidth(self.pushButton.sizePolicy().hasHeightForWidth())
-        self.pushButton.setSizePolicy(sizePolicy1)
+        self.StartPS_PushButton = QPushButton(self.widget_13)
+        self.StartPS_PushButton.setObjectName(u"StartPS_PushButton")
+        sizePolicy1.setHeightForWidth(self.StartPS_PushButton.sizePolicy().hasHeightForWidth())
+        self.StartPS_PushButton.setSizePolicy(sizePolicy1)
 
-        self.gridLayout.addWidget(self.pushButton, 6, 0, 1, 3)
+        self.gridLayout.addWidget(self.StartPS_PushButton, 6, 0, 1, 3)
 
-        self.pushButton_2 = QPushButton(self.widget_13)
-        self.pushButton_2.setObjectName(u"pushButton_2")
-        sizePolicy1.setHeightForWidth(self.pushButton_2.sizePolicy().hasHeightForWidth())
-        self.pushButton_2.setSizePolicy(sizePolicy1)
+        self.StopPS_PushButton = QPushButton(self.widget_13)
+        self.StopPS_PushButton.setObjectName(u"StopPS_PushButton")
+        sizePolicy1.setHeightForWidth(self.StopPS_PushButton.sizePolicy().hasHeightForWidth())
+        self.StopPS_PushButton.setSizePolicy(sizePolicy1)
 
-        self.gridLayout.addWidget(self.pushButton_2, 7, 0, 1, 3)
+        self.gridLayout.addWidget(self.StopPS_PushButton, 7, 0, 1, 3)
 
         self.PsStart_DoubleSpinBox = QDoubleSpinBox(self.widget_13)
         self.PsStart_DoubleSpinBox.setObjectName(u"PsStart_DoubleSpinBox")
@@ -279,8 +279,8 @@ class Ui_PhotoluminescenceWidget(object):
         self.NumMeasurements_Label.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"45", None))
         self.PsStop_DoubleSpinBox.setSuffix(QCoreApplication.translate("PhotoluminescenceWidget", u"\u00b0", None))
         self.PsStep_DoubleSpinBox.setSuffix(QCoreApplication.translate("PhotoluminescenceWidget", u"\u00b0", None))
-        self.pushButton.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Start", None))
-        self.pushButton_2.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Stop", None))
+        self.StartPS_PushButton.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Start", None))
+        self.StopPS_PushButton.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Stop", None))
         self.PsStart_DoubleSpinBox.setSuffix(QCoreApplication.translate("PhotoluminescenceWidget", u"\u00b0", None))
         self.label_2.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Filename", None))
         self.label.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Directory", None))

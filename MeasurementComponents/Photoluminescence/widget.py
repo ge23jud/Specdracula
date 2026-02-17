@@ -7,6 +7,7 @@ from .photoluminescence_ui import Ui_PhotoluminescenceWidget
 
 from PySide6 import QtCore, QtWidgets
 
+plot_colors = ["#fde725", "#b5de2b", "#6ece58", "#35b779", "#1f9e89", "#26828e", "#31688e", "#3e4989", "#482878", "#440154"]
 
 class PhotoluminescenceView(TurboComponentView, Ui_PhotoluminescenceWidget):
     def __init__(self, component, parent=None):
@@ -24,11 +25,14 @@ class PhotoluminescenceView(TurboComponentView, Ui_PhotoluminescenceWidget):
         SFT.connect_widget_to_param(self.Snapshot_PushButton, component.single_ActionParam)
         SFT.connect_widget_to_param(self.StartLivePL_PushButton, component.continuous_ActionParam)
         SFT.connect_widget_to_param(self.StopLivePL_PushButton, component.interrupt_ActionParam)
+        SFT.connect_widget_to_param(self.StartPS_PushButton, component.powerseries_ActionParam)
 
 
         component.x_label.sigValueChanged.connect(self._on_xlabel_changed)
         component.n_measurements.sigValueChanged.connect(self._on_ps_input_update_nmeasurements_label)
         component.intensity_counts.sigValueChanged.connect(self._update_plot_single)
+        component.intensity_counts_powerseries.sigValueChanged.connect(self._update_plot_powerseries)
+        component.powerseries_ActionParam.sigActivated.connect(self._clear_plot)
         
 
     def setup_plot(self):
@@ -64,5 +68,19 @@ class PhotoluminescenceView(TurboComponentView, Ui_PhotoluminescenceWidget):
         X = self.component.wavelength_nm.value()
         Y = self.component.intensity_counts.value().flatten()
         self.spectrum_plotDataItem.setData(x=X, y=Y)
+
+
+    @QtCore.Slot()
+    def _update_plot_powerseries(self):
+        num_items = len(self.plot_widget.listDataItems())
+        X = self.component.wavelength_nm.value()
+        Y = self.component.intensity_counts_powerseries.value().flatten()
+        self.spectrum_plotDataItem = self.plot_widget.plot(X, Y, pen=plot_colors[num_items])
+
+
+    @QtCore.Slot()
+    def _clear_plot(self):
+        self.plot_widget.clear()
+        
 
     
