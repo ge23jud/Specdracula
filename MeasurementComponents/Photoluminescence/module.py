@@ -2,6 +2,7 @@ from PySide6 import QtCore
 import numpy as np
 import ScopeFoundry as SFT
 from ScopeFoundry import Module, ObjectParameter
+from helperfunctions import HelperFunctions
 
 
 class PhotoluminescenceModule(Module):
@@ -12,28 +13,23 @@ class PhotoluminescenceModule(Module):
     hwp = SFT.ObjectParameter("HWP", SFT.TurboComponent)
 
     y_scale = SFT.ObjectParameter("Y scale", dtype=str, value="Linear", range=SFT.ChoiceRangeType(**{"Linear": 0, "Logarithmic": 1}), doc="Y-axis scale type")
-    x_label = SFT.ObjectParameter("X Label", dtype=str, value="Energy", range=SFT.ChoiceRangeType(**{"Energy": 0, "Wavelength": 1}), doc="X-label")
+    x_label = SFT.ObjectParameter("X Label", dtype=str, value="Wavelength", range=SFT.ChoiceRangeType(**{"Energy": 0, "Wavelength": 1}), doc="X-label")
     ps_start = SFT.ObjectParameter("Power HWP Start Position", dtype=float, value=0.0, range=SFT.MinMaxRangeType(min=0.0, max=360.0, decimals=2), unit="°" )
     ps_stop = SFT.ObjectParameter("Power HWP Stop Position", dtype=float, value=45.0, range=SFT.MinMaxRangeType(min=0.0, max=360.0), unit="°")
     ps_step = SFT.ObjectParameter("Power HWP Step", dtype=float, value=1.0, range=SFT.MinMaxRangeType(min=0.0, max=360.0), unit="°")
     n_measurements = SFT.ObjectParameter("N Measurements", dtype=int, value=0)
-
-
-
-
     extra_timeout = SFT.ObjectParameter('Acquisition timeout', dtype=float, unit='s', value=3.0)
     wavelength_nm = SFT.ObjectParameter('Wavelength', dtype=np.ndarray, unit='nm', value=None, readonly=True)
+    energy_ev = SFT.ObjectParameter("Energy", dtype=np.ndarray, unit="eV", value=None, readonly=True)
     intensity_counts = SFT.ObjectParameter('Intensity (counts)', dtype=np.ndarray, value=None, readonly=True)
     intensity_counts_powerseries = SFT.ObjectParameter("Intensities for Powerseries", dtype=np.ndarray, value=None, readonly=True)
     intensity_counts_powerseries_complete = SFT.ObjectParameter("Intensities for Powerseries Complete Array", dtype=np.ndarray, value=None, readonly=True)
     repetitions = SFT.ObjectParameter('Repetitions', dtype=int, value=1, readonly=False)
     averaging = SFT.ObjectParameter('Averaging', dtype=bool, value=True, readonly=False)
-
     single_ActionParam = SFT.ActionParameter('Acquire Single')
     continuous_ActionParam = SFT.ActionParameter('Acquire Continuous')
     interrupt_ActionParam = SFT.ActionParameter('Interrupt Acquire')
     powerseries_ActionParam = SFT.ActionParameter("Run Powerseries")
-
 
 
 
@@ -55,6 +51,8 @@ class PhotoluminescenceModule(Module):
         self.powerseries_ActionParam.sigActivated.connect(lambda: self.task_powerseries.run_on_pool())
         self._interrupted = False
         #self.file_exporters["HDF files (*.h5)"] = AndorCCDReadoutMeasure.to_hdf
+
+        self.wavelength_nm.sigValueChanged.connect(self._update_energy_array)
 
 
     def acquire_single(self):
@@ -90,8 +88,8 @@ class PhotoluminescenceModule(Module):
         # First collect the WL if required:
         if self.spectrograph.value() is None:
             raise Exception('Spectrograph not connected.')
-        elif not self.spectrograph.value().connected.value():
-            raise Exception('Spectrograph not connected.')
+        # elif not self.spectrograph.value().connected.value():
+        #     raise Exception('Spectrograph not connected.')
         spec = self.spectrograph.value()
         task = spec.wavelength_calib.trigger_read()
         task.wait(timeout=3.0)
@@ -106,8 +104,8 @@ class PhotoluminescenceModule(Module):
         """
         if self.camera.value() is None:
             raise Exception('Camera not connected.')
-        elif self.camera.value().connected.value() == False:
-            raise Exception('Camera not connected.')
+        # elif self.camera.value().connected.value() == False:
+        #     raise Exception('Camera not connected.')
         cam = self.camera.value()
         if wavelength_buffer is not None:
             try:
@@ -192,4 +190,11 @@ class PhotoluminescenceModule(Module):
     def _on_ps_input_update_nmeasurements_value(self):
         n = int((self.ps_stop.value()-self.ps_start.value())/self.ps_step.value()) + 1
         self.n_measurements.setValue(n)
+
+
+    @QtCore.Slot()
+    def _update_energy_array(self):
+        wavelengths = self.wavelength_nm.value()
+        energies = HelperFunctions().wavelength_energy_converter(wavelengths)
+        self.energy_ev.setValue(energies)
         

@@ -38,6 +38,7 @@ class AndorCCDHW(HardwareModule):
         name="Exposure time",
         dtype=float,
         unit="s",
+        value=0.1,
         range=SFT.MinMaxRangeType(min=0, max=86400, decimals=5)
     )
     acc_cycle_time = PhysicalParameter(
