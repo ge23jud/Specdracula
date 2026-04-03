@@ -10,27 +10,6 @@ class HelperFunctions():
         return h*c/array *1e9 /e
 
 
-    def save_as_h5(self, x, y, labelx, labely, path):
-        
-        today = dt.datetime()
-
-        # Date:	Friday, December 14, 2018, 4:10 PM	
-        # Measurement type:	X vs Y/Delay position vs. Power	
-        # Temperature: 	296.928 K	
-        # Integration time:	0.100 s	
-        # Excitation power:	939.1248 nW	
-        # Center wavelength	100.001 nm / 12.398 eV	
-        # Dispersion window:	41.220 nm / 5.334 eV	
-        # Entrance slit width:	0.100 mm	
-        # Exit slit width:	0.000 mm
-
-
-
-        with h5py.File(path, "w") as f:
-
-            f.create_dataset("labelx", data=x)
-            f.create_dataset("labely", data=y)
-
         
     def write_origin(
         self,
@@ -127,6 +106,7 @@ class HelperFunctions():
 
 
         wavelength = np.asarray(wavelength)
+
         excitation_power = np.asarray(excitation_power)
         intensity = np.asarray(intensity)
  
@@ -205,25 +185,19 @@ class HelperFunctions():
         
 
 
-rng = np.random.default_rng(42)
- 
-wl = np.linspace(756.0, 760.0, 5)
-ep = np.array([0.001, 0.005, 0.010])
-counts = rng.integers(1000, 3000, size=(5, 3)).astype(float)
-
-obj = HelperFunctions()
-obj.write_origin(
-    date=dt.datetime(2019, 2, 13, 15, 42),
-    measurement_type="X vs Y/Powerseries vs. Photoluminescence",
-    temperature=10.067,
-    integration_time=20.0,
-    power=194.0184,
-    center_wavelength=910.002,
-    dispersion_window=307.256,
-    entrance_slit_width=0.1,
-    exit_slit_width=0.0,
-    wavelength=wl,
-    excitation_power=ep,
-    intensity=counts,
-    filepath="C:\WSI\specdracula/test_output.origin",
-)
+# obj = HelperFunctions()
+# obj.write_origin(
+#     date=dt.datetime(2019, 2, 13, 15, 42),
+#     measurement_type="X vs Y/Powerseries vs. Photoluminescence",
+#     temperature=10.067,
+#     integration_time=20.0,
+#     power=194.0184,
+#     center_wavelength=910.002,
+#     dispersion_window=307.256,
+#     entrance_slit_width=0.1,
+#     exit_slit_width=0.0,
+#     wavelength=wl,
+#     excitation_power=ep,
+#     intensity=counts,
+#     filepath="C:\WSI\specdracula/test_output.origin",
+# )

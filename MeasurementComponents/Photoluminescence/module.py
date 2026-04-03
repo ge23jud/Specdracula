@@ -1,6 +1,7 @@
 from PySide6 import QtCore
 import numpy as np
 import ScopeFoundry as SFT
+import datetime as dt
 from ScopeFoundry import Module, ObjectParameter
 from helperfunctions import HelperFunctions
 
@@ -26,7 +27,10 @@ class PhotoluminescenceModule(Module):
     intensity_counts_powerseries_complete = SFT.ObjectParameter("Intensities for Powerseries Complete Array", dtype=np.ndarray, value=None, readonly=True)
     repetitions = SFT.ObjectParameter('Repetitions', dtype=int, value=1, readonly=False)
     averaging = SFT.ObjectParameter('Averaging', dtype=bool, value=True, readonly=False)
+    #integration_time = SFT.ObjectParameter()
+
     single_ActionParam = SFT.ActionParameter('Acquire Single')
+    save_single_ActionParam = SFT.ActionParameter("Save PL Snapshot")
     continuous_ActionParam = SFT.ActionParameter('Acquire Continuous')
     interrupt_ActionParam = SFT.ActionParameter('Interrupt Acquire')
     powerseries_ActionParam = SFT.ActionParameter("Run Powerseries")
@@ -42,10 +46,12 @@ class PhotoluminescenceModule(Module):
 
         '''Connect action parameters to ui buttons'''
         self.task_single = SFT.WorkerTask("Acquire single", self.acquire_single, default_thread_pool=self.thread_pool)
+        self.task_save_single = SFT.WorkerTask("Save PL Snapshot", self.save_single, default_thread_pool=self.thread_pool)
         self.task_continuous = SFT.WorkerTask("Acquire continuous", self.acquire_continuous, default_thread_pool=self.thread_pool)
         self.task_powerseries = SFT.WorkerTask("Run Powerseries", self.powerseries, default_thread_pool=self.thread_pool)
 
         self.single_ActionParam.sigActivated.connect(lambda: self.task_single.run_on_pool())
+        self.save_single_ActionParam.sigActivated.connect(lambda: self.task_save_single.run_on_pool())
         self.continuous_ActionParam.sigActivated.connect(lambda: self.task_continuous.run_on_pool())
         self.interrupt_ActionParam.sigActivated.connect(self.interrupt)
         self.powerseries_ActionParam.sigActivated.connect(lambda: self.task_powerseries.run_on_pool())
@@ -64,6 +70,30 @@ class PhotoluminescenceModule(Module):
             repetitions=self.repetitions.value()
         )
         self._interrupted = False
+
+    
+    def save_single(self):
+        """Save currently displayed PL Snapshot"""
+
+        cam = self.camera.value()
+        spec = self.spectrograph.value()
+
+        datetime = dt.datetime.now()
+        temperature = 0 # to implement
+        integration_time = cam.exposure.value()
+        power = 0#
+        center_wavelength = spec.center_wavelength.value() * 1e9
+        entrance_slit_width = spec.entrance_slit_direct.value()
+        exit_slit_width = 0
+        excitation_power = np.zeros(1)
+        filepath = r"C:\WSI\specdracula\testdark.origin"
+
+        intensity = self.intensity_counts.value().T
+        wavelength = self.wavelength_nm.value()
+        dispersion_window = wavelength[-1] - wavelength[0]
+
+        HelperFunctions().write_origin(datetime, "Powerseries", temperature, integration_time, power, center_wavelength, dispersion_window, 
+                                       entrance_slit_width, exit_slit_width, wavelength, excitation_power, intensity, filepath)
 
 
     def acquire_continuous(self):
@@ -176,6 +206,22 @@ class PhotoluminescenceModule(Module):
         data = np.empty((n, no_pixels))
         self.intensity_counts_powerseries_complete.setValue(data)
         print("Number of Measurements:", self.n_measurements.value())
+
+
+        cam = self.camera.value()
+        spec = self.spectrograph.value()
+
+        datetime = dt.datetime.now()
+        temperature = 0 # to implement
+        integration_time = cam.exposure.value()
+        power = 0#
+        center_wavelength = spec.center_wavelength.value() * 1e9
+        entrance_slit_width = spec.entrance_slit_direct.value()
+        exit_slit_width = 0
+        excitation_power = np.zeros(n)
+        filepath = r"C:\WSI\specdracula\testorigin.origin"
+
+
         for i in range(self.n_measurements.value()):    
 
             hwp.write_angle(start + i*step)
@@ -183,6 +229,13 @@ class PhotoluminescenceModule(Module):
             self._acquire(self.intensity_counts_powerseries, self.wavelength_nm, self.averaging.value(), False)
             data[i, :] = self.intensity_counts_powerseries.value().flatten()
             self.intensity_counts_powerseries_complete.setValue(data)
+
+        intensity = self.intensity_counts_powerseries_complete.value().T
+        wavelength = self.wavelength_nm.value()
+        dispersion_window = wavelength[-1] - wavelength[0]
+
+        HelperFunctions().write_origin(datetime, "Powerseries", temperature, integration_time, power, center_wavelength, dispersion_window, 
+                                       entrance_slit_width, exit_slit_width, wavelength, excitation_power, intensity, filepath)
 
 
 

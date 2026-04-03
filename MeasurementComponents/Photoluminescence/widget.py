@@ -23,6 +23,7 @@ class PhotoluminescenceView(TurboComponentView, Ui_PhotoluminescenceWidget):
         SFT.connect_widget_to_param(self.PsStep_DoubleSpinBox, component.ps_step)
 
         SFT.connect_widget_to_param(self.Snapshot_PushButton, component.single_ActionParam)
+        SFT.connect_widget_to_param(self.SavePL_PushButton, component.save_single_ActionParam)
         SFT.connect_widget_to_param(self.StartLivePL_PushButton, component.continuous_ActionParam)
         SFT.connect_widget_to_param(self.StopLivePL_PushButton, component.interrupt_ActionParam)
         SFT.connect_widget_to_param(self.StartPS_PushButton, component.powerseries_ActionParam)
