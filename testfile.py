@@ -1,4 +1,4 @@
-from pyAndorSDK2 import atmcd
+import datetime as dt
 
-print("Contents of atmcd module:")
-print(dir(atmcd))
+today = dt.datetime.now()
+print(today)
