@@ -45,6 +45,7 @@ class SpecDracula(SFT.TurboControl):
         self.log.info('setup')
         
         dashboard = DashboardModule(name='Dashboard')
+        dashboard.connect()
         xymeasurement = XYMeasurementModule(name="XYMeasurement")
         photoluminescence = PhotoluminescenceModule(name="Photoluminescence")
         status = StatusModule(name='Status')
@@ -67,10 +68,10 @@ class SpecDracula(SFT.TurboControl):
         # shutter.connect()
 
         # HWP setup
-        hwp_motor = ThorlabsKDC101_PRMTZ8(name='HWP Rotation')
-        _temp = hwp_motor.find_param_by_name('Serial number')
-        set_initial(_temp, '27253212')  # KDC101 serial number
-        hwp_motor.connect()
+        # hwp_motor = ThorlabsKDC101_PRMTZ8(name='HWP Rotation')
+        # _temp = hwp_motor.find_param_by_name('Serial number')
+        # set_initial(_temp, '27253212')  # KDC101 serial number
+        # hwp_motor.connect()
 
         # Piezo setup
         # piezo_stage = PiezoJenaNV40_HW(name='Piezo stage')
@@ -92,7 +93,11 @@ class SpecDracula(SFT.TurboControl):
 
         photoluminescence.camera.setValue(ccd_camera)
         photoluminescence.spectrograph.setValue(spec)
-        photoluminescence.hwp.setValue(hwp_motor)
+        # photoluminescence.hwp.setValue(hwp_motor)
+
+        dashboard.camera.setValue(ccd_camera)
+        dashboard.spectrograph.setValue(spec)
+        # dashboard.halfwaveplate.setValue(hwp_motor)
 
 
     def setup_ui(self, main_window):
