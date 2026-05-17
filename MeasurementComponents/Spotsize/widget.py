@@ -3,41 +3,40 @@ import ScopeFoundry as SFT
 import pyqtgraph as pg
 import numpy as np
 from ScopeFoundry import TurboComponentView, connect_widget_to_param
-from .photoluminescence_ui import Ui_PhotoluminescenceWidget
+from .Spotsize_ui import Ui_SpotsizeWidget
 
 from PySide6 import QtCore, QtWidgets
 
 plot_colors = ["#fde725", "#6ece58", "#35b779", "#1f9e89", "#26828e", "#31688e", "#3e4989", "#482878", "#440154"]
 
-class PhotoluminescenceView(TurboComponentView, Ui_PhotoluminescenceWidget):
+class SpotsizeView(TurboComponentView, Ui_SpotsizeWidget):
     def __init__(self, component, parent=None):
         TurboComponentView.__init__(self, component, parent=parent)
         
         self.setupUi(self)
         self.setup_plot()
 
-        SFT.connect_widget_to_param(self.yscale_ComboBox, component.y_scale)
-        SFT.connect_widget_to_param(self.xlabel_ComboBox, component.x_label)
-        SFT.connect_widget_to_param(self.PsStart_DoubleSpinBox, component.ps_start)
-        SFT.connect_widget_to_param(self.PsStop_DoubleSpinBox, component.ps_stop)
-        SFT.connect_widget_to_param(self.PsStep_DoubleSpinBox, component.ps_step)
-        SFT.connect_widget_to_param(self.Directory_LineEdit, component.save_directory)
-        SFT.connect_widget_to_param(self.Filename_LineEdit, component.save_filename)
 
-        SFT.connect_widget_to_param(self.Snapshot_PushButton, component.single_ActionParam)
-        SFT.connect_widget_to_param(self.SavePL_PushButton, component.save_single_ActionParam)
-        SFT.connect_widget_to_param(self.StartLivePL_PushButton, component.continuous_ActionParam)
-        SFT.connect_widget_to_param(self.StopLivePL_PushButton, component.interrupt_ActionParam)
-        SFT.connect_widget_to_param(self.StartPS_PushButton, component.powerseries_ActionParam)
+        SFT.connect_widget_to_param(self.Start_DoubleSpinBox, component.start)
+        SFT.connect_widget_to_param(self.Stop_DoubleSpinBox, component.stop)
+        SFT.connect_widget_to_param(self.Start_PushButton, component.run_ActionParam)
+        # SFT.connect_widget_to_param(self.PsStart_DoubleSpinBox, component.start)
+        # SFT.connect_widget_to_param(self.PsStop_DoubleSpinBox, component.stop)
+        # SFT.connect_widget_to_param(self.PsStep_DoubleSpinBox, component.step)
+        # SFT.connect_widget_to_param(self.Directory_LineEdit, component.save_directory)
+        # SFT.connect_widget_to_param(self.Filename_LineEdit, component.save_filename)
+
+        # SFT.connect_widget_to_param(self.Snapshot_PushButton, component.single_ActionParam)
 
 
-        component.x_label.sigValueChanged.connect(self._on_xlabel_changed)
-        component.n_measurements.sigValueChanged.connect(self._on_ps_input_update_nmeasurements_label)
-        component.intensity_counts.sigValueChanged.connect(self._update_plot_single)
-        component.intensity_counts_powerseries.sigValueChanged.connect(self._update_plot_powerseries)
-        component.powerseries_ActionParam.sigActivated.connect(self._clear_plot)
-        component.single_ActionParam.sigActivated.connect(self._clear_plot)
-        component.continuous_ActionParam.sigActivated.connect(self._clear_plot)
+
+
+        # component.n_measurements.sigValueChanged.connect(self._on_ps_input_update_nmeasurements_label)
+        # component.intensity_counts.sigValueChanged.connect(self._update_plot_single)
+        # component.intensity_counts_powerseries.sigValueChanged.connect(self._update_plot_powerseries)
+        # component.powerseries_ActionParam.sigActivated.connect(self._clear_plot)
+        # component.single_ActionParam.sigActivated.connect(self._clear_plot)
+        # component.continuous_ActionParam.sigActivated.connect(self._clear_plot)
         
 
     def setup_plot(self):

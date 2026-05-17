@@ -4,6 +4,7 @@ import ScopeFoundry as SFT
 import datetime as dt
 from ScopeFoundry import Module, ObjectParameter
 from helperfunctions import HelperFunctions
+import os
 
 
 class PhotoluminescenceModule(Module):
@@ -12,6 +13,7 @@ class PhotoluminescenceModule(Module):
     camera = SFT.ObjectParameter('Camera', SFT.TurboComponent)
     spectrograph = SFT.ObjectParameter('Spectrograph', SFT.TurboComponent)
     hwp = SFT.ObjectParameter("HWP", SFT.TurboComponent)
+    powermeter = SFT.ObjectParameter("Powermeter", SFT.TurboComponent)
 
     y_scale = SFT.ObjectParameter("Y scale", dtype=str, value="Linear", range=SFT.ChoiceRangeType(**{"Linear": 0, "Logarithmic": 1}), doc="Y-axis scale type")
     x_label = SFT.ObjectParameter("X Label", dtype=str, value="Wavelength", range=SFT.ChoiceRangeType(**{"Energy": 0, "Wavelength": 1}), doc="X-label")
@@ -25,9 +27,13 @@ class PhotoluminescenceModule(Module):
     intensity_counts = SFT.ObjectParameter('Intensity (counts)', dtype=np.ndarray, value=None, readonly=True)
     intensity_counts_powerseries = SFT.ObjectParameter("Intensities for Powerseries", dtype=np.ndarray, value=None, readonly=True)
     intensity_counts_powerseries_complete = SFT.ObjectParameter("Intensities for Powerseries Complete Array", dtype=np.ndarray, value=None, readonly=True)
+    powers = SFT.ObjectParameter("Powers", dtype=np.ndarray, value=None)
     repetitions = SFT.ObjectParameter('Repetitions', dtype=int, value=1, readonly=False)
     averaging = SFT.ObjectParameter('Averaging', dtype=bool, value=True, readonly=False)
     #integration_time = SFT.ObjectParameter()
+    save_directory = SFT.ObjectParameter("Save Directory", dtype=str, value=f"C:\Measurements\{dt.date.today().__str__().replace("-", "")}")
+    save_filename = SFT.ObjectParameter("Save Filename", dtype=str, value="")
+    # save_string = SFT.ObjectParameter("Save String", dtype=str, value="", readonly=True) 
 
     single_ActionParam = SFT.ActionParameter('Acquire Single')
     save_single_ActionParam = SFT.ActionParameter("Save PL Snapshot")
@@ -43,6 +49,7 @@ class PhotoluminescenceModule(Module):
         self.ps_start.sigValueChanged.connect(self._on_ps_input_update_nmeasurements_value)
         self.ps_stop.sigValueChanged.connect(self._on_ps_input_update_nmeasurements_value)
         self.ps_step.sigValueChanged.connect(self._on_ps_input_update_nmeasurements_value)
+        self.save_directory.sigValueChanged.connect(self.check_dir_exists)
 
         '''Connect action parameters to ui buttons'''
         self.task_single = SFT.WorkerTask("Acquire single", self.acquire_single, default_thread_pool=self.thread_pool)
@@ -77,16 +84,18 @@ class PhotoluminescenceModule(Module):
 
         cam = self.camera.value()
         spec = self.spectrograph.value()
+        pm = self.powermeter.value()
 
         datetime = dt.datetime.now()
         temperature = 0 # to implement
         integration_time = cam.exposure.value()
-        power = 0#
+        pm.reading.trigger_read()
+        power = pm.reading.value() * 1e3 # convert to mW
         center_wavelength = spec.center_wavelength.value() * 1e9
-        entrance_slit_width = spec.entrance_slit_direct.value()
+        entrance_slit_width = spec.entrance_slit_direct.value() * 1e3 # convert to mm
         exit_slit_width = 0
         excitation_power = np.zeros(1)
-        filepath = r"C:\WSI\specdracula\testdark.origin"
+        filepath = self.update_save_string()
 
         intensity = self.intensity_counts.value().T
         wavelength = self.wavelength_nm.value()
@@ -205,21 +214,22 @@ class PhotoluminescenceModule(Module):
         n = self.n_measurements.value()
         data = np.empty((n, no_pixels))
         self.intensity_counts_powerseries_complete.setValue(data)
+        data_power = np.empty(n)
+        data_angle = np.empty(n)
         print("Number of Measurements:", self.n_measurements.value())
 
 
         cam = self.camera.value()
         spec = self.spectrograph.value()
+        pm = self.powermeter.value()
 
         datetime = dt.datetime.now()
         temperature = 0 # to implement
         integration_time = cam.exposure.value()
-        power = 0#
         center_wavelength = spec.center_wavelength.value() * 1e9
-        entrance_slit_width = spec.entrance_slit_direct.value()
+        entrance_slit_width = spec.entrance_slit_direct.value() * 1e3 # convert to mm
         exit_slit_width = 0
-        excitation_power = np.zeros(n)
-        filepath = r"C:\WSI\specdracula\testorigin.origin"
+        filepath = self.update_save_string()
 
 
         for i in range(self.n_measurements.value()):    
@@ -227,12 +237,18 @@ class PhotoluminescenceModule(Module):
             hwp.write_angle(start + i*step)
             #print("angle:", start+i*step)
             self._acquire(self.intensity_counts_powerseries, self.wavelength_nm, self.averaging.value(), False)
+            pm.reading.trigger_read()
+            power = pm.reading.value()
+            data_power[i] = power
+            self.powers.setValue(data_power)
             data[i, :] = self.intensity_counts_powerseries.value().flatten()
             self.intensity_counts_powerseries_complete.setValue(data)
 
         intensity = self.intensity_counts_powerseries_complete.value().T
         wavelength = self.wavelength_nm.value()
         dispersion_window = wavelength[-1] - wavelength[0]
+        excitation_power = self.powers.value()
+        power = excitation_power[0]
 
         HelperFunctions().write_origin(datetime, "Powerseries", temperature, integration_time, power, center_wavelength, dispersion_window, 
                                        entrance_slit_width, exit_slit_width, wavelength, excitation_power, intensity, filepath)
@@ -250,4 +266,22 @@ class PhotoluminescenceModule(Module):
         wavelengths = self.wavelength_nm.value()
         energies = HelperFunctions().wavelength_energy_converter(wavelengths)
         self.energy_ev.setValue(energies)
+
+
+    def update_save_string(self):
+        dir = self.save_directory.value()
+        file = self.save_filename.value()
+        
+        helper = HelperFunctions()
+        filenumber = helper.get_next_file_number(dir)
+
+        new_save_string =  f"{dir}\\{filenumber}_{file}.origin"
+        # self.save_string.setValue(new_save_string)
+        return new_save_string
+    
+    def check_dir_exists(self):
+        filepath = self.save_directory.value()
+        if os.path.isdir(filepath):
+            os.makedirs(filepath)
+
         

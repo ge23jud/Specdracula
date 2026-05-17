@@ -38,9 +38,9 @@
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>-61</y>
-        <width>289</width>
-        <height>689</height>
+        <y>0</y>
+        <width>284</width>
+        <height>732</height>
        </rect>
       </property>
       <property name="sizePolicy">
@@ -96,62 +96,26 @@
            <number>5</number>
           </property>
           <item row="4" column="0">
-           <widget class="QLabel" name="label_21">
+           <widget class="QLabel" name="label_8">
             <property name="text">
-             <string>Entrance</string>
+             <string>Side Input Slit</string>
             </property>
            </widget>
           </item>
-          <item row="5" column="1">
-           <widget class="QComboBox" name="Exit_ComboBox">
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>25</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>16777215</width>
-              <height>25</height>
-             </size>
-            </property>
-           </widget>
+          <item row="7" column="1">
+           <widget class="QComboBox" name="OutputMirror_ComboBox"/>
           </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="label_20">
+          <item row="7" column="0">
+           <widget class="QLabel" name="label_7">
             <property name="text">
-             <string>Grating</string>
+             <string>Output Mirror</string>
             </property>
            </widget>
           </item>
-          <item row="3" column="1">
-           <widget class="QComboBox" name="Grating_ComboBox">
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>25</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>16777215</width>
-              <height>25</height>
-             </size>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="label_19">
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_18">
             <property name="text">
-             <string>Center Energy</string>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="0">
-           <widget class="QLabel" name="label_22">
-            <property name="text">
-             <string>Exit</string>
+             <string>Center Wavelength</string>
             </property>
            </widget>
           </item>
@@ -180,6 +144,27 @@
             </property>
            </widget>
           </item>
+          <item row="5" column="1">
+           <widget class="QDoubleSpinBox" name="DirectInputSlit_DoubleSpinBox">
+            <property name="buttonSymbols">
+             <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0">
+           <widget class="QLabel" name="label_5">
+            <property name="text">
+             <string>Input Mirror</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="QDoubleSpinBox" name="SideInputSlit_DoubleSpinBox">
+            <property name="buttonSymbols">
+             <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+            </property>
+           </widget>
+          </item>
           <item row="1" column="1">
            <widget class="QDoubleSpinBox" name="CenterWavelength_DoubleSpinBox">
             <property name="sizePolicy">
@@ -205,26 +190,10 @@
             </property>
            </widget>
           </item>
-          <item row="4" column="1">
-           <widget class="QComboBox" name="Entrance_ComboBox">
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>25</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>16777215</width>
-              <height>25</height>
-             </size>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_18">
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_19">
             <property name="text">
-             <string>Center Wavelength</string>
+             <string>Center Energy</string>
             </property>
            </widget>
           </item>
@@ -243,6 +212,39 @@
              </size>
             </property>
            </spacer>
+          </item>
+          <item row="5" column="0">
+           <widget class="QLabel" name="label_22">
+            <property name="text">
+             <string>Direct Input Slit</string>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="0">
+           <widget class="QLabel" name="label_20">
+            <property name="text">
+             <string>Grating</string>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="1">
+           <widget class="QComboBox" name="Grating_ComboBox">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>25</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>25</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="1">
+           <widget class="QComboBox" name="InputMirror_ComboBox"/>
           </item>
          </layout>
         </widget>

@@ -17,10 +17,20 @@ class DashboardModule(Module):
     piezo_y = SFT.PhysicalParameter("Piezo Y", dtype=float, value=0., unit="um")
     piezo_step = SFT.PhysicalParameter("Piezo Step", dtype=float, value=0.1, unit="um")
     hwp_position = SFT.PhysicalParameter("HWP Position", dtype=float, value=45., unit="°")
-    grating = SFT.PhysicalParameter("Grating", dtype=str, )
+    selected_grating = SFT.PhysicalParameter('Selected grating', dtype=str, value="150 l/mm", range=SFT.ChoiceRangeType(**{"150 l/mm": 1, "300 l/mm": 2}))
+    input_mirror = SFT.PhysicalParameter("Input Mirror", dtype=str, value="Direct", range=SFT.ChoiceRangeType(**{"Direct": 0, "Side": 1}))
+    output_mirror = SFT.PhysicalParameter("Output Mirror", dtype=str, value="Side", range=SFT.ChoiceRangeType(**{"Direct": 0, "Side": 1}))
+    direct_input_slit_width = SFT.PhysicalParameter("Direct Input Slit Width", dtype=float, value=100e-6, unit="m", range=SFT.MinMaxRangeType(min=10e-6, max=2000e-6))
+    side_input_slit_width = SFT.PhysicalParameter("Side Input Slit Width", dtype=float, value=100e-6, unit="m", range=SFT.MinMaxRangeType(min=10e-6, max=2000e-6))
 
 
     def connect(self):
+
+        self.spec = self.spectrograph.value()
+        self.dev_id = self.spec.device_id.value()
+        self.cam = self.camera.value()
+
+        self.Helper = HelperFunctions()
 
         self.hwp_position.connect_to_hardware(
             read_func=self.get_HWP_position,
@@ -41,7 +51,61 @@ class DashboardModule(Module):
             read_func=self.get_center_energy,
             write_func=self.set_center_energy
         )
-        
+
+        self.selected_grating.connect_to_hardware(
+            read_func=self.get_selected_grating,
+            write_func=self.set_selected_grating
+        )
+
+        self.direct_input_slit_width.connect_to_hardware(
+            read_func=self.get_direct_input_slit_width,
+            write_func=self.set_direct_input_slit_width
+        )
+
+        self.side_input_slit_width.connect_to_hardware(
+            read_func=self.get_side_input_slit_width,
+            write_func=self.set_side_input_slit_width
+        )
+
+        self.input_mirror.connect_to_hardware(
+            read_func=self.get_input_mirror,
+            write_func=self.set_input_mirror
+        )
+
+        self.output_mirror.connect_to_hardware(
+            read_func=self.get_output_mirror,
+            write_func=self.set_output_mirror
+        )
+
+    def set_output_mirror(self, mirror):
+        self.spec.host.SetFlipperMirror(int(self.dev_id), 2, int(self.output_mirror.range[mirror]))
+
+    def get_output_mirror(self):
+        return self.spec.host.GetFlipperMirror(int(self.dev_id), 2)
+    
+    def set_input_mirror(self, mirror):
+        self.spec.host.SetFlipperMirror(int(self.dev_id), 1, int(self.input_mirror.range[mirror]))
+
+    def get_input_mirror(self):
+        return self.spec.host.GetFlipperMirror(int(self.dev_id), 1)
+    
+    def set_direct_input_slit_width(self, width):
+        self.spec.host.SetSlitWidth(int(self.dev_id), int(2), width=float(width * 1e6))
+
+    def get_direct_input_slit_width(self):
+        return float(self.spec.host.GetSlitWidth(int(self.dev_id), int(2)) / 1e6)
+    
+    def set_side_input_slit_width(self, width):
+        self.spec.host.SetSlitWidth(int(self.dev_id), int(1), width=float(width * 1e6))
+
+    def get_side_input_slit_width(self):
+        return float(self.spec.host.GetSlitWidth(int(self.dev_id), int(1)) / 1e6)
+
+    def set_selected_grating(self, grating):
+        self.spec.host.SetGrating(int(self.dev_id), self.selected_grating.range[grating])
+
+    def get_selected_grating(self):
+        return self.spec.host.GetGrating(int(self.dev_id))
 
     def set_HWP_position(self, angle):
         hwp = self.halfwaveplate.value()
@@ -52,34 +116,22 @@ class DashboardModule(Module):
          return hwp.read_angle()
     
     def set_integration_time(self, time):
-        cam = self.camera.value()
-        cam.host.SetExposureTime(time)
+        self.cam.host.SetExposureTime(time)
 
     def get_integration_time(self):
-        cam = self.camera.value()
-        return cam._get_acquisition_timings()[0]
+        return self.cam._get_acquisition_timings()[0]
     
     def set_center_wavelength(self, wavelength):
-        spec = self.spectrograph.value()
-        dev_id = spec.device_id.value()
-        spec.host.SetWavelength(int(dev_id), float(wavelength / 1e-9))
+        self.spec.host.SetWavelength(int(self.dev_id), float(wavelength / 1e-9))
         self.center_energy.trigger_read()
 
     def get_center_wavelength(self):
-        spec = self.spectrograph.value()
-        dev_id = spec.device_id.value()
-        return float(spec.host.GetWavelength(int(dev_id))) * 1e-9
+        return float(self.spec.host.GetWavelength(int(self.dev_id))) * 1e-9
     
     def set_center_energy(self, energy):
-        spec = self.spectrograph.value()
-        dev_id = spec.device_id.value()
-        Helper = HelperFunctions()
-        spec.host.SetWavelength(int(dev_id), float(Helper.wavelength_energy_converter(energy)))
+        self.spec.host.SetWavelength(int(self.dev_id), float(self.Helper.wavelength_energy_converter(energy)))
         self.center_wavelength.trigger_read()
 
 
     def get_center_energy(self):
-        spec = self.spectrograph.value()
-        dev_id = spec.device_id.value()
-        Helper = HelperFunctions()
-        return float(Helper.wavelength_energy_converter(spec.host.GetWavelength(int(dev_id))))
+        return float(self.Helper.wavelength_energy_converter(self.spec.host.GetWavelength(int(self.dev_id))))

@@ -3,13 +3,13 @@ import ScopeFoundry as SFT
 import pyqtgraph as pg
 import numpy as np
 from ScopeFoundry import TurboComponentView, connect_widget_to_param
-from .photoluminescence_ui import Ui_PhotoluminescenceWidget
+from .PowerCalibration_ui import Ui_PowerCalibrationWidget
 
 from PySide6 import QtCore, QtWidgets
 
 plot_colors = ["#fde725", "#6ece58", "#35b779", "#1f9e89", "#26828e", "#31688e", "#3e4989", "#482878", "#440154"]
 
-class PhotoluminescenceView(TurboComponentView, Ui_PhotoluminescenceWidget):
+class PowerCalibrationView(TurboComponentView, Ui_PowerCalibrationWidget):
     def __init__(self, component, parent=None):
         TurboComponentView.__init__(self, component, parent=parent)
         

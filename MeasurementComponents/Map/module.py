@@ -17,7 +17,7 @@ class MapModule(Module):
     save_directory = SFT.ObjectParameter("Save Directory", dtype=str, value=f"C:\Measurements\{dt.date.today().__str__().replace("-", "")}")
     save_filename = SFT.ObjectParameter("Save Filename", dtype=str, value="")
     save_filenumber = SFT.ObjectParameter("Save Filenumber", dtype=int, value=0)
-    save_string = SFT.ObjectParameter("Save String", dtype=str, value="", readonly=True) 
+    # save_string = SFT.ObjectParameter("Save String", dtype=str, value="", readonly=True) 
 
 
     def __init__(self, name=None, parent=None):

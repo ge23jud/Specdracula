@@ -43,7 +43,7 @@ class Ui_DashboardWidget(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, -61, 289, 689))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 284, 732))
         sizePolicy.setHeightForWidth(self.scrollAreaWidgetContents.sizePolicy().hasHeightForWidth())
         self.scrollAreaWidgetContents.setSizePolicy(sizePolicy)
         self.verticalLayout_2 = QVBoxLayout(self.scrollAreaWidgetContents)
@@ -63,39 +63,25 @@ class Ui_DashboardWidget(object):
         self.gridLayout_4 = QGridLayout(self.groupBox_2)
         self.gridLayout_4.setObjectName(u"gridLayout_4")
         self.gridLayout_4.setVerticalSpacing(5)
-        self.label_21 = QLabel(self.groupBox_2)
-        self.label_21.setObjectName(u"label_21")
+        self.label_8 = QLabel(self.groupBox_2)
+        self.label_8.setObjectName(u"label_8")
 
-        self.gridLayout_4.addWidget(self.label_21, 4, 0, 1, 1)
+        self.gridLayout_4.addWidget(self.label_8, 4, 0, 1, 1)
 
-        self.Exit_ComboBox = QComboBox(self.groupBox_2)
-        self.Exit_ComboBox.setObjectName(u"Exit_ComboBox")
-        self.Exit_ComboBox.setMinimumSize(QSize(0, 25))
-        self.Exit_ComboBox.setMaximumSize(QSize(16777215, 25))
+        self.OutputMirror_ComboBox = QComboBox(self.groupBox_2)
+        self.OutputMirror_ComboBox.setObjectName(u"OutputMirror_ComboBox")
 
-        self.gridLayout_4.addWidget(self.Exit_ComboBox, 5, 1, 1, 1)
+        self.gridLayout_4.addWidget(self.OutputMirror_ComboBox, 7, 1, 1, 1)
 
-        self.label_20 = QLabel(self.groupBox_2)
-        self.label_20.setObjectName(u"label_20")
+        self.label_7 = QLabel(self.groupBox_2)
+        self.label_7.setObjectName(u"label_7")
 
-        self.gridLayout_4.addWidget(self.label_20, 3, 0, 1, 1)
+        self.gridLayout_4.addWidget(self.label_7, 7, 0, 1, 1)
 
-        self.Grating_ComboBox = QComboBox(self.groupBox_2)
-        self.Grating_ComboBox.setObjectName(u"Grating_ComboBox")
-        self.Grating_ComboBox.setMinimumSize(QSize(0, 25))
-        self.Grating_ComboBox.setMaximumSize(QSize(16777215, 25))
+        self.label_18 = QLabel(self.groupBox_2)
+        self.label_18.setObjectName(u"label_18")
 
-        self.gridLayout_4.addWidget(self.Grating_ComboBox, 3, 1, 1, 1)
-
-        self.label_19 = QLabel(self.groupBox_2)
-        self.label_19.setObjectName(u"label_19")
-
-        self.gridLayout_4.addWidget(self.label_19, 2, 0, 1, 1)
-
-        self.label_22 = QLabel(self.groupBox_2)
-        self.label_22.setObjectName(u"label_22")
-
-        self.gridLayout_4.addWidget(self.label_22, 5, 0, 1, 1)
+        self.gridLayout_4.addWidget(self.label_18, 1, 0, 1, 1)
 
         self.CenterEnergy_DoubleSpinBox = QDoubleSpinBox(self.groupBox_2)
         self.CenterEnergy_DoubleSpinBox.setObjectName(u"CenterEnergy_DoubleSpinBox")
@@ -110,6 +96,23 @@ class Ui_DashboardWidget(object):
 
         self.gridLayout_4.addWidget(self.CenterEnergy_DoubleSpinBox, 2, 1, 1, 1)
 
+        self.DirectInputSlit_DoubleSpinBox = QDoubleSpinBox(self.groupBox_2)
+        self.DirectInputSlit_DoubleSpinBox.setObjectName(u"DirectInputSlit_DoubleSpinBox")
+        self.DirectInputSlit_DoubleSpinBox.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
+
+        self.gridLayout_4.addWidget(self.DirectInputSlit_DoubleSpinBox, 5, 1, 1, 1)
+
+        self.label_5 = QLabel(self.groupBox_2)
+        self.label_5.setObjectName(u"label_5")
+
+        self.gridLayout_4.addWidget(self.label_5, 6, 0, 1, 1)
+
+        self.SideInputSlit_DoubleSpinBox = QDoubleSpinBox(self.groupBox_2)
+        self.SideInputSlit_DoubleSpinBox.setObjectName(u"SideInputSlit_DoubleSpinBox")
+        self.SideInputSlit_DoubleSpinBox.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
+
+        self.gridLayout_4.addWidget(self.SideInputSlit_DoubleSpinBox, 4, 1, 1, 1)
+
         self.CenterWavelength_DoubleSpinBox = QDoubleSpinBox(self.groupBox_2)
         self.CenterWavelength_DoubleSpinBox.setObjectName(u"CenterWavelength_DoubleSpinBox")
         sizePolicy3.setHeightForWidth(self.CenterWavelength_DoubleSpinBox.sizePolicy().hasHeightForWidth())
@@ -120,21 +123,36 @@ class Ui_DashboardWidget(object):
 
         self.gridLayout_4.addWidget(self.CenterWavelength_DoubleSpinBox, 1, 1, 1, 1)
 
-        self.Entrance_ComboBox = QComboBox(self.groupBox_2)
-        self.Entrance_ComboBox.setObjectName(u"Entrance_ComboBox")
-        self.Entrance_ComboBox.setMinimumSize(QSize(0, 25))
-        self.Entrance_ComboBox.setMaximumSize(QSize(16777215, 25))
+        self.label_19 = QLabel(self.groupBox_2)
+        self.label_19.setObjectName(u"label_19")
 
-        self.gridLayout_4.addWidget(self.Entrance_ComboBox, 4, 1, 1, 1)
-
-        self.label_18 = QLabel(self.groupBox_2)
-        self.label_18.setObjectName(u"label_18")
-
-        self.gridLayout_4.addWidget(self.label_18, 1, 0, 1, 1)
+        self.gridLayout_4.addWidget(self.label_19, 2, 0, 1, 1)
 
         self.verticalSpacer = QSpacerItem(20, 15, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
 
         self.gridLayout_4.addItem(self.verticalSpacer, 0, 0, 1, 2)
+
+        self.label_22 = QLabel(self.groupBox_2)
+        self.label_22.setObjectName(u"label_22")
+
+        self.gridLayout_4.addWidget(self.label_22, 5, 0, 1, 1)
+
+        self.label_20 = QLabel(self.groupBox_2)
+        self.label_20.setObjectName(u"label_20")
+
+        self.gridLayout_4.addWidget(self.label_20, 8, 0, 1, 1)
+
+        self.Grating_ComboBox = QComboBox(self.groupBox_2)
+        self.Grating_ComboBox.setObjectName(u"Grating_ComboBox")
+        self.Grating_ComboBox.setMinimumSize(QSize(0, 25))
+        self.Grating_ComboBox.setMaximumSize(QSize(16777215, 25))
+
+        self.gridLayout_4.addWidget(self.Grating_ComboBox, 8, 1, 1, 1)
+
+        self.InputMirror_ComboBox = QComboBox(self.groupBox_2)
+        self.InputMirror_ComboBox.setObjectName(u"InputMirror_ComboBox")
+
+        self.gridLayout_4.addWidget(self.InputMirror_ComboBox, 6, 1, 1, 1)
 
         self.gridLayout_4.setColumnStretch(1, 1)
 
@@ -337,13 +355,15 @@ class Ui_DashboardWidget(object):
     def retranslateUi(self, DashboardWidget):
         DashboardWidget.setWindowTitle(QCoreApplication.translate("DashboardWidget", u"Form", None))
         self.groupBox_2.setTitle(QCoreApplication.translate("DashboardWidget", u"Spectrometer", None))
-        self.label_21.setText(QCoreApplication.translate("DashboardWidget", u"Entrance", None))
-        self.label_20.setText(QCoreApplication.translate("DashboardWidget", u"Grating", None))
-        self.label_19.setText(QCoreApplication.translate("DashboardWidget", u"Center Energy", None))
-        self.label_22.setText(QCoreApplication.translate("DashboardWidget", u"Exit", None))
-        self.CenterEnergy_DoubleSpinBox.setSuffix("")
-        self.CenterWavelength_DoubleSpinBox.setSuffix("")
+        self.label_8.setText(QCoreApplication.translate("DashboardWidget", u"Side Input Slit", None))
+        self.label_7.setText(QCoreApplication.translate("DashboardWidget", u"Output Mirror", None))
         self.label_18.setText(QCoreApplication.translate("DashboardWidget", u"Center Wavelength", None))
+        self.CenterEnergy_DoubleSpinBox.setSuffix("")
+        self.label_5.setText(QCoreApplication.translate("DashboardWidget", u"Input Mirror", None))
+        self.CenterWavelength_DoubleSpinBox.setSuffix("")
+        self.label_19.setText(QCoreApplication.translate("DashboardWidget", u"Center Energy", None))
+        self.label_22.setText(QCoreApplication.translate("DashboardWidget", u"Direct Input Slit", None))
+        self.label_20.setText(QCoreApplication.translate("DashboardWidget", u"Grating", None))
         self.groupBox_4.setTitle(QCoreApplication.translate("DashboardWidget", u"Detector", None))
         self.DetectorTemperature_Label.setText(QCoreApplication.translate("DashboardWidget", u"TextLabel", None))
         self.IntegrationTime_DoubleSpinBox.setSuffix("")

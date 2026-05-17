@@ -3,12 +3,46 @@ from scipy.constants import h, c, e
 import h5py
 import datetime as dt
 import math
+import os
+import re
 
 class HelperFunctions():
 
     def wavelength_energy_converter(self, array):
         return h*c/array *1e9 /e
 
+
+    def get_next_file_number(self, directory: str) -> str:
+        """
+        Scans a directory for files starting with a 3-digit number and returns
+        the next number in the sequence as a zero-padded 3-digit string.
+
+        Args:
+            directory: Path to the directory to scan.
+
+        Returns:
+            The next available number as a 3-digit string (e.g. '007').
+
+        Raises:
+            ValueError: If the next number would exceed 999.
+        """
+        highest = -1
+        pattern = re.compile(r'^(\d{3})')
+
+        if not os.path.isdir("/path/to/directory"):
+            return "000"
+
+        for filename in os.listdir(directory):
+            match = pattern.match(filename)
+            if match:
+                highest = max(highest, int(match.group(1)))
+
+        next_number = highest + 1
+
+        if next_number > 999:
+            raise ValueError("File number limit reached (999). Cannot increment further.")
+
+        return f"{next_number:03d}"
 
         
     def write_origin(
@@ -24,6 +58,7 @@ class HelperFunctions():
         exit_slit_width: float,
         wavelength: np.ndarray,
         excitation_power: np.ndarray,
+        angles: np.ndarray,
         intensity: np.ndarray,
         filepath: str,
     ) -> None:
@@ -153,7 +188,7 @@ class HelperFunctions():
         lines.append(f"Measurement type:\t{measurement_type}{header_pad}")
         lines.append(f"Temperature: \t{temperature:.3f} K{header_pad}")
         lines.append(f"Integration time:\t{integration_time:.3f} s{header_pad}")
-        lines.append(f"Excitation power:\t{power:.4f} uW{header_pad}")
+        lines.append(f"Excitation power:\t{power:.4f} mW{header_pad}")
         lines.append(
             f"Center wavelength\t{center_wavelength:.3f} nm"
             f" / {_fmt_ev(center_ev)} eV{header_pad}"
@@ -170,7 +205,7 @@ class HelperFunctions():
         lines.append(f"Wavelength \t{col_headers}")
         lines.append(f"(nm)\t{col_units}")
         lines.append(f"Excitation power (W)\t{exc_power_vals}")
-        lines.append(f"Powerseries (mW)\t{ps_indices}")
+        lines.append(f"Power HWP Position (°)\t{angles}")
  
         # -- data matrix -------------------------------------------------------
         for i in range(n):
@@ -183,21 +218,3 @@ class HelperFunctions():
             fh.write("\n".join(lines) + "\n")
 
         
-
-
-# obj = HelperFunctions()
-# obj.write_origin(
-#     date=dt.datetime(2019, 2, 13, 15, 42),
-#     measurement_type="X vs Y/Powerseries vs. Photoluminescence",
-#     temperature=10.067,
-#     integration_time=20.0,
-#     power=194.0184,
-#     center_wavelength=910.002,
-#     dispersion_window=307.256,
-#     entrance_slit_width=0.1,
-#     exit_slit_width=0.0,
-#     wavelength=wl,
-#     excitation_power=ep,
-#     intensity=counts,
-#     filepath="C:\WSI\specdracula/test_output.origin",
-# )

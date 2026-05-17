@@ -183,25 +183,25 @@ class Ui_PhotoluminescenceWidget(object):
         self.widget_2.setSizePolicy(sizePolicy)
         self.gridLayout_2 = QGridLayout(self.widget_2)
         self.gridLayout_2.setObjectName(u"gridLayout_2")
-        self.label_2 = QLabel(self.widget_2)
-        self.label_2.setObjectName(u"label_2")
-
-        self.gridLayout_2.addWidget(self.label_2, 1, 0, 1, 1)
-
         self.label = QLabel(self.widget_2)
         self.label.setObjectName(u"label")
 
         self.gridLayout_2.addWidget(self.label, 0, 0, 1, 1)
 
-        self.lineEdit = QLineEdit(self.widget_2)
-        self.lineEdit.setObjectName(u"lineEdit")
+        self.Filename_LineEdit = QLineEdit(self.widget_2)
+        self.Filename_LineEdit.setObjectName(u"Filename_LineEdit")
 
-        self.gridLayout_2.addWidget(self.lineEdit, 0, 1, 1, 1)
+        self.gridLayout_2.addWidget(self.Filename_LineEdit, 1, 1, 1, 1)
 
-        self.lineEdit_2 = QLineEdit(self.widget_2)
-        self.lineEdit_2.setObjectName(u"lineEdit_2")
+        self.label_2 = QLabel(self.widget_2)
+        self.label_2.setObjectName(u"label_2")
 
-        self.gridLayout_2.addWidget(self.lineEdit_2, 1, 1, 1, 1)
+        self.gridLayout_2.addWidget(self.label_2, 1, 0, 1, 1)
+
+        self.Directory_LineEdit = QLineEdit(self.widget_2)
+        self.Directory_LineEdit.setObjectName(u"Directory_LineEdit")
+
+        self.gridLayout_2.addWidget(self.Directory_LineEdit, 0, 1, 1, 1)
 
 
         self.horizontalLayout_2.addWidget(self.widget_2)
@@ -282,8 +282,8 @@ class Ui_PhotoluminescenceWidget(object):
         self.StartPS_PushButton.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Start", None))
         self.StopPS_PushButton.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Stop", None))
         self.PsStart_DoubleSpinBox.setSuffix(QCoreApplication.translate("PhotoluminescenceWidget", u"\u00b0", None))
-        self.label_2.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Filename", None))
         self.label.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Directory", None))
+        self.label_2.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Filename", None))
         self.xlabel_ComboBox.setItemText(0, QCoreApplication.translate("PhotoluminescenceWidget", u"Energy", None))
         self.xlabel_ComboBox.setItemText(1, QCoreApplication.translate("PhotoluminescenceWidget", u"Wavelength", None))
 

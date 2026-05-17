@@ -3,6 +3,8 @@ sys.path.insert(0, 'C:/WSI/turbo')
 
 import logging
 import sys
+import os
+import datetime as dt
 from time import sleep
 import ScopeFoundry as SFT
 import qdarkstyle
@@ -22,6 +24,7 @@ from MeasurementComponents.Photoluminescence import PhotoluminescenceModule
 from MeasurementComponents.dashboard import DashboardModule, DashboardView
 from MeasurementComponents.status import StatusModule, StatusView
 from MeasurementComponents.Map import MapModule
+from MeasurementComponents.Spotsize import SpotsizeModule
 
 
 def set_initial(param, value):
@@ -45,19 +48,19 @@ class SpecDracula(SFT.TurboControl):
         self.log.info('setup')
         
         dashboard = DashboardModule(name='Dashboard')
-        dashboard.connect()
         xymeasurement = XYMeasurementModule(name="XYMeasurement")
         photoluminescence = PhotoluminescenceModule(name="Photoluminescence")
         status = StatusModule(name='Status')
         map = MapModule(name="2D Map")
+        spotsize = SpotsizeModule(name="Spotsize")
 
         # Powermeter setup
-        # power_meter = ThorlabsPowerMeterHW(name='PM100')
-        # _temp = power_meter.find_param_by_name('Port')
-        # set_initial(_temp, 'ASRL19::INSTR')
-        # _temp = power_meter.find_param_by_name('Friendly name')
-        # set_initial(_temp, 'Powermeter')
-        # power_meter.connect()
+        power_meter = ThorlabsPowerMeterHW(name='PM100')
+        _temp = power_meter.find_param_by_name('Port')
+        set_initial(_temp, 'ASRL19::INSTR')
+        _temp = power_meter.find_param_by_name('Friendly name')
+        set_initial(_temp, 'Powermeter')
+        power_meter.connect()
 
         # # Shutter setup
         # shutter = ArduinoShutterHW(name='Shutter 1')
@@ -74,12 +77,12 @@ class SpecDracula(SFT.TurboControl):
         # hwp_motor.connect()
 
         # Piezo setup
-        # piezo_stage = PiezoJenaNV40_HW(name='Piezo stage')
-        # _temp = piezo_stage.find_param_by_name('Port')
-        # set_initial(_temp, 'ASRL12::INSTR')
-        # _temp = piezo_stage.find_param_by_name('Friendly name')
-        # set_initial(_temp, "Piezo stage")
-        # piezo_stage.connect()
+        piezo_stage = PiezoJenaNV40_HW(name='Piezo stage')
+        _temp = piezo_stage.find_param_by_name('Port')
+        set_initial(_temp, 'ASRL12::INSTR')
+        _temp = piezo_stage.find_param_by_name('Friendly name')
+        set_initial(_temp, "Piezo stage")
+        piezo_stage.connect()
 
         ccd_camera = AndorCCDHW(name='AndorCCD')
         _temp = ccd_camera.find_param_by_name('Friendly name')
@@ -94,10 +97,15 @@ class SpecDracula(SFT.TurboControl):
         photoluminescence.camera.setValue(ccd_camera)
         photoluminescence.spectrograph.setValue(spec)
         # photoluminescence.hwp.setValue(hwp_motor)
+        photoluminescence.powermeter.setValue(power_meter)
 
         dashboard.camera.setValue(ccd_camera)
         dashboard.spectrograph.setValue(spec)
         # dashboard.halfwaveplate.setValue(hwp_motor)
+        dashboard.connect()
+
+        spotsize.powermeter.setValue(power_meter)
+        spotsize.piezo.setValue(piezo_stage)
 
 
     def setup_ui(self, main_window):
@@ -199,6 +207,10 @@ if __name__ == "__main__":
     )
     app = SpecDracula()
     app.setup()
+
+    filepath = f"C:\Measurements\{dt.date.today().__str__().replace("-", "")}"
+    if not os.path.isdir(filepath):
+        os.makedirs(filepath)
 
     window = SFT.TurboMainWindow()
 

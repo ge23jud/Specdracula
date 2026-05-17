@@ -1,0 +1,236 @@
+# -*- coding: utf-8 -*-
+
+################################################################################
+## Form generated from reading UI file 'Spotsize.ui'
+##
+## Created by: Qt User Interface Compiler version 6.9.0
+##
+## WARNING! All changes made in this file will be lost when recompiling UI file!
+################################################################################
+
+from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
+    QMetaObject, QObject, QPoint, QRect,
+    QSize, QTime, QUrl, Qt)
+from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
+    QFont, QFontDatabase, QGradient, QIcon,
+    QImage, QKeySequence, QLinearGradient, QPainter,
+    QPalette, QPixmap, QRadialGradient, QTransform)
+from PySide6.QtWidgets import (QAbstractSpinBox, QApplication, QComboBox, QDoubleSpinBox,
+    QGridLayout, QHBoxLayout, QLabel, QLineEdit,
+    QPushButton, QSizePolicy, QVBoxLayout, QWidget)
+
+from pyqtgraph import PlotWidget
+
+class Ui_SpotsizeWidget(object):
+    def setupUi(self, SpotsizeWidget):
+        if not SpotsizeWidget.objectName():
+            SpotsizeWidget.setObjectName(u"SpotsizeWidget")
+        SpotsizeWidget.resize(1094, 780)
+        self.verticalLayout = QVBoxLayout(SpotsizeWidget)
+        self.verticalLayout.setObjectName(u"verticalLayout")
+        self.widget = QWidget(SpotsizeWidget)
+        self.widget.setObjectName(u"widget")
+        self.horizontalLayout = QHBoxLayout(self.widget)
+        self.horizontalLayout.setSpacing(0)
+        self.horizontalLayout.setObjectName(u"horizontalLayout")
+        self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
+        self.widget_4 = QWidget(self.widget)
+        self.widget_4.setObjectName(u"widget_4")
+        self.verticalLayout_11 = QVBoxLayout(self.widget_4)
+        self.verticalLayout_11.setObjectName(u"verticalLayout_11")
+        self.plot_widget = PlotWidget(self.widget_4)
+        self.plot_widget.setObjectName(u"plot_widget")
+        self.plot_widget.setEnabled(True)
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.plot_widget.sizePolicy().hasHeightForWidth())
+        self.plot_widget.setSizePolicy(sizePolicy)
+
+        self.verticalLayout_11.addWidget(self.plot_widget)
+
+        self.SaveData = QWidget(self.widget_4)
+        self.SaveData.setObjectName(u"SaveData")
+        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        sizePolicy1.setHorizontalStretch(0)
+        sizePolicy1.setVerticalStretch(0)
+        sizePolicy1.setHeightForWidth(self.SaveData.sizePolicy().hasHeightForWidth())
+        self.SaveData.setSizePolicy(sizePolicy1)
+        self.SaveData.setMinimumSize(QSize(0, 0))
+        self.SaveData.setMaximumSize(QSize(16777215, 16777215))
+        self.horizontalLayout_2 = QHBoxLayout(self.SaveData)
+        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
+        self.widget_13 = QWidget(self.SaveData)
+        self.widget_13.setObjectName(u"widget_13")
+        sizePolicy2 = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding)
+        sizePolicy2.setHorizontalStretch(0)
+        sizePolicy2.setVerticalStretch(0)
+        sizePolicy2.setHeightForWidth(self.widget_13.sizePolicy().hasHeightForWidth())
+        self.widget_13.setSizePolicy(sizePolicy2)
+        self.widget_13.setMinimumSize(QSize(0, 100))
+        self.widget_13.setMaximumSize(QSize(16777215, 170))
+        self.gridLayout = QGridLayout(self.widget_13)
+        self.gridLayout.setObjectName(u"gridLayout")
+        self.label_8 = QLabel(self.widget_13)
+        self.label_8.setObjectName(u"label_8")
+        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+        sizePolicy3.setHorizontalStretch(0)
+        sizePolicy3.setVerticalStretch(0)
+        sizePolicy3.setHeightForWidth(self.label_8.sizePolicy().hasHeightForWidth())
+        self.label_8.setSizePolicy(sizePolicy3)
+        self.label_8.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout.addWidget(self.label_8, 4, 0, 1, 1)
+
+        self.label_14 = QLabel(self.widget_13)
+        self.label_14.setObjectName(u"label_14")
+        sizePolicy4 = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Preferred)
+        sizePolicy4.setHorizontalStretch(0)
+        sizePolicy4.setVerticalStretch(0)
+        sizePolicy4.setHeightForWidth(self.label_14.sizePolicy().hasHeightForWidth())
+        self.label_14.setSizePolicy(sizePolicy4)
+
+        self.gridLayout.addWidget(self.label_14, 2, 0, 1, 1)
+
+        self.Start_DoubleSpinBox = QDoubleSpinBox(self.widget_13)
+        self.Start_DoubleSpinBox.setObjectName(u"Start_DoubleSpinBox")
+        self.Start_DoubleSpinBox.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
+
+        self.gridLayout.addWidget(self.Start_DoubleSpinBox, 0, 1, 1, 2)
+
+        self.label_13 = QLabel(self.widget_13)
+        self.label_13.setObjectName(u"label_13")
+        sizePolicy4.setHeightForWidth(self.label_13.sizePolicy().hasHeightForWidth())
+        self.label_13.setSizePolicy(sizePolicy4)
+
+        self.gridLayout.addWidget(self.label_13, 0, 0, 1, 1)
+
+        self.Start_PushButton = QPushButton(self.widget_13)
+        self.Start_PushButton.setObjectName(u"Start_PushButton")
+        sizePolicy1.setHeightForWidth(self.Start_PushButton.sizePolicy().hasHeightForWidth())
+        self.Start_PushButton.setSizePolicy(sizePolicy1)
+        self.Start_PushButton.setMinimumSize(QSize(0, 20))
+
+        self.gridLayout.addWidget(self.Start_PushButton, 6, 0, 1, 3)
+
+        self.Stop_DoubleSpinBox = QDoubleSpinBox(self.widget_13)
+        self.Stop_DoubleSpinBox.setObjectName(u"Stop_DoubleSpinBox")
+        sizePolicy5 = QSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
+        sizePolicy5.setHorizontalStretch(0)
+        sizePolicy5.setVerticalStretch(0)
+        sizePolicy5.setHeightForWidth(self.Stop_DoubleSpinBox.sizePolicy().hasHeightForWidth())
+        self.Stop_DoubleSpinBox.setSizePolicy(sizePolicy5)
+        self.Stop_DoubleSpinBox.setMinimumSize(QSize(100, 10))
+        self.Stop_DoubleSpinBox.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
+
+        self.gridLayout.addWidget(self.Stop_DoubleSpinBox, 1, 1, 1, 2)
+
+        self.Step_DoubleSpinBox = QDoubleSpinBox(self.widget_13)
+        self.Step_DoubleSpinBox.setObjectName(u"Step_DoubleSpinBox")
+        sizePolicy5.setHeightForWidth(self.Step_DoubleSpinBox.sizePolicy().hasHeightForWidth())
+        self.Step_DoubleSpinBox.setSizePolicy(sizePolicy5)
+        self.Step_DoubleSpinBox.setMinimumSize(QSize(100, 10))
+        self.Step_DoubleSpinBox.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
+
+        self.gridLayout.addWidget(self.Step_DoubleSpinBox, 2, 1, 1, 2)
+
+        self.label_7 = QLabel(self.widget_13)
+        self.label_7.setObjectName(u"label_7")
+        sizePolicy4.setHeightForWidth(self.label_7.sizePolicy().hasHeightForWidth())
+        self.label_7.setSizePolicy(sizePolicy4)
+
+        self.gridLayout.addWidget(self.label_7, 1, 0, 1, 1)
+
+        self.Stop_PushButton = QPushButton(self.widget_13)
+        self.Stop_PushButton.setObjectName(u"Stop_PushButton")
+        sizePolicy1.setHeightForWidth(self.Stop_PushButton.sizePolicy().hasHeightForWidth())
+        self.Stop_PushButton.setSizePolicy(sizePolicy1)
+        self.Stop_PushButton.setMinimumSize(QSize(0, 20))
+
+        self.gridLayout.addWidget(self.Stop_PushButton, 7, 0, 1, 3)
+
+        self.NumMeasurements_Label = QLabel(self.widget_13)
+        self.NumMeasurements_Label.setObjectName(u"NumMeasurements_Label")
+        sizePolicy4.setHeightForWidth(self.NumMeasurements_Label.sizePolicy().hasHeightForWidth())
+        self.NumMeasurements_Label.setSizePolicy(sizePolicy4)
+
+        self.gridLayout.addWidget(self.NumMeasurements_Label, 4, 1, 1, 1)
+
+        self.label_3 = QLabel(self.widget_13)
+        self.label_3.setObjectName(u"label_3")
+
+        self.gridLayout.addWidget(self.label_3, 3, 0, 1, 1)
+
+        self.Axis_ComboBox = QComboBox(self.widget_13)
+        self.Axis_ComboBox.setObjectName(u"Axis_ComboBox")
+        sizePolicy5.setHeightForWidth(self.Axis_ComboBox.sizePolicy().hasHeightForWidth())
+        self.Axis_ComboBox.setSizePolicy(sizePolicy5)
+        self.Axis_ComboBox.setMinimumSize(QSize(100, 10))
+
+        self.gridLayout.addWidget(self.Axis_ComboBox, 3, 1, 1, 2)
+
+        self.gridLayout.setColumnStretch(0, 1)
+
+        self.horizontalLayout_2.addWidget(self.widget_13)
+
+        self.widget_2 = QWidget(self.SaveData)
+        self.widget_2.setObjectName(u"widget_2")
+        sizePolicy.setHeightForWidth(self.widget_2.sizePolicy().hasHeightForWidth())
+        self.widget_2.setSizePolicy(sizePolicy)
+        self.gridLayout_2 = QGridLayout(self.widget_2)
+        self.gridLayout_2.setObjectName(u"gridLayout_2")
+        self.label = QLabel(self.widget_2)
+        self.label.setObjectName(u"label")
+
+        self.gridLayout_2.addWidget(self.label, 0, 0, 1, 1)
+
+        self.Filename_LineEdit = QLineEdit(self.widget_2)
+        self.Filename_LineEdit.setObjectName(u"Filename_LineEdit")
+
+        self.gridLayout_2.addWidget(self.Filename_LineEdit, 1, 1, 1, 1)
+
+        self.label_2 = QLabel(self.widget_2)
+        self.label_2.setObjectName(u"label_2")
+
+        self.gridLayout_2.addWidget(self.label_2, 1, 0, 1, 1)
+
+        self.Directory_LineEdit = QLineEdit(self.widget_2)
+        self.Directory_LineEdit.setObjectName(u"Directory_LineEdit")
+
+        self.gridLayout_2.addWidget(self.Directory_LineEdit, 0, 1, 1, 1)
+
+
+        self.horizontalLayout_2.addWidget(self.widget_2)
+
+
+        self.verticalLayout_11.addWidget(self.SaveData)
+
+
+        self.horizontalLayout.addWidget(self.widget_4)
+
+
+        self.verticalLayout.addWidget(self.widget)
+
+
+        self.retranslateUi(SpotsizeWidget)
+
+        QMetaObject.connectSlotsByName(SpotsizeWidget)
+    # setupUi
+
+    def retranslateUi(self, SpotsizeWidget):
+        SpotsizeWidget.setWindowTitle(QCoreApplication.translate("SpotsizeWidget", u"Form", None))
+        self.label_8.setText(QCoreApplication.translate("SpotsizeWidget", u"Measurements", None))
+        self.label_14.setText(QCoreApplication.translate("SpotsizeWidget", u"Step", None))
+        self.Start_DoubleSpinBox.setSuffix(QCoreApplication.translate("SpotsizeWidget", u"\u00b0", None))
+        self.label_13.setText(QCoreApplication.translate("SpotsizeWidget", u"Start", None))
+        self.Start_PushButton.setText(QCoreApplication.translate("SpotsizeWidget", u"Start", None))
+        self.Stop_DoubleSpinBox.setSuffix(QCoreApplication.translate("SpotsizeWidget", u"\u00b0", None))
+        self.Step_DoubleSpinBox.setSuffix(QCoreApplication.translate("SpotsizeWidget", u"\u00b0", None))
+        self.label_7.setText(QCoreApplication.translate("SpotsizeWidget", u"Stop", None))
+        self.Stop_PushButton.setText(QCoreApplication.translate("SpotsizeWidget", u"Stop", None))
+        self.NumMeasurements_Label.setText(QCoreApplication.translate("SpotsizeWidget", u"45", None))
+        self.label_3.setText(QCoreApplication.translate("SpotsizeWidget", u"Axis", None))
+        self.label.setText(QCoreApplication.translate("SpotsizeWidget", u"Directory", None))
+        self.label_2.setText(QCoreApplication.translate("SpotsizeWidget", u"Filename", None))
+    # retranslateUi
+
