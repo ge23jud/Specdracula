@@ -2,6 +2,7 @@ from PySide6 import QtCore
 import numpy as np
 import ScopeFoundry as SFT
 import datetime as dt
+from time import sleep
 from ScopeFoundry import Module, ObjectParameter
 from helperfunctions import HelperFunctions
 import os
@@ -9,26 +10,24 @@ import os
 
 class PowerCalibrationModule(Module):
 
-    # devices
     hwp = SFT.ObjectParameter("HWP", SFT.TurboComponent)
+    powermeter = SFT.ObjectParameter("Powermeter", SFT.TurboComponent)
 
-    ps_start = SFT.ObjectParameter("Power HWP Start Position", dtype=float, value=0.0, range=SFT.MinMaxRangeType(min=0.0, max=360.0, decimals=2), unit="°" )
+    ps_start = SFT.ObjectParameter("Power HWP Start Position", dtype=float, value=0.0, range=SFT.MinMaxRangeType(min=0.0, max=360.0, decimals=2), unit="°")
     ps_stop = SFT.ObjectParameter("Power HWP Stop Position", dtype=float, value=45.0, range=SFT.MinMaxRangeType(min=0.0, max=360.0), unit="°")
-    ps_step = SFT.ObjectParameter("Power HWP Step", dtype=float, value=1.0, range=SFT.MinMaxRangeType(min=0.0, max=360.0), unit="°")
-    n_measurements = SFT.ObjectParameter("N Measurements", dtype=int, value=0)
-    extra_timeout = SFT.ObjectParameter('Acquisition timeout', dtype=float, unit='s', value=3.0)
-    save_directory = SFT.ObjectParameter("Save Directory", dtype=str, value=f"C:\Measurements\{dt.date.today().__str__().replace("-", "")}")
+    ps_step = SFT.ObjectParameter("Power HWP Step", dtype=float, value=1.0, range=SFT.MinMaxRangeType(min=0.1, max=360.0), unit="°")
+    n_measurements = SFT.ObjectParameter("N Measurements", dtype=int, value=46)
+    save_directory = SFT.ObjectParameter("Save Directory", dtype=str, value=f"C:\\Measurements\\{dt.date.today().__str__().replace('-', '')}")
     save_filename = SFT.ObjectParameter("Save Filename", dtype=str, value="")
-    angles_buffer = SFT.ObjectParameters("HWP Angles", dtype=np.ndarray, unit="°", value=None)
-    powers_buffer = SFT.ObjectParameter("Powers", dype=np.ndarray, unit="W", value=None)
+    angles_buffer = SFT.ObjectParameter("HWP Angles", dtype=np.ndarray, unit="°", value=np.array([]))
+    powers_buffer = SFT.ObjectParameter("Powers", dtype=np.ndarray, unit="W", value=np.array([]))
 
-    interrupt_ActionParam = SFT.ActionParameter('Interrupt Acquire')
+    interrupt_ActionParam = SFT.ActionParameter('Interrupt')
     run_ActionParam = SFT.ActionParameter("Run Power Calibration")
-
 
     def __init__(self, name=None, parent=None):
         super().__init__(name=name, parent=parent)
-   
+
         self.ps_start.sigValueChanged.connect(self._on_ps_input_update_nmeasurements_value)
         self.ps_stop.sigValueChanged.connect(self._on_ps_input_update_nmeasurements_value)
         self.ps_step.sigValueChanged.connect(self._on_ps_input_update_nmeasurements_value)
@@ -40,68 +39,56 @@ class PowerCalibrationModule(Module):
         self.run_ActionParam.sigActivated.connect(lambda: self.task_run.run_on_pool())
         self._interrupted = False
 
-
     @QtCore.Slot()
     def interrupt(self):
         self._interrupted = True
 
-
     def run(self):
+        self._interrupted = False
         start = self.ps_start.value()
         stop = self.ps_stop.value()
         step = self.ps_step.value()
         hwp = self.hwp.value()
-        
-        hwp.write_angle(start)
+        pm = self.powermeter.value()
 
-        n = self.n_measurements.value()
+        positions = np.arange(start, stop + step * 0.5, step)
+        angles = []
+        powers = []
 
-        datetime = dt.datetime.now()
-        temperature = 0 # to implement
-        integration_time = 0
-        power = 0#
-        center_wavelength = 1
-        entrance_slit_width = 0
-        exit_slit_width = 0
-        excitation_power = np.zeros(n)
+        for pos in positions:
+            if self._interrupted:
+                break
+            hwp.write_angle(pos)
+            sleep(0.2)
+            pm.reading.trigger_read()
+            p = pm.reading.value()
+            angles.append(pos)
+            powers.append(p)
+            self.angles_buffer.setValue(np.array(angles))
+            self.powers_buffer.setValue(np.array(powers))
+
         filepath = self.update_save_string()
-
-
-        for i in range(self.n_measurements.value()):    
-
-            hwp.write_angle(start + i*step)
-
-            
-
-        intensity = self.intensity_counts_powerseries_complete.value().T
-        wavelength = self.wavelength_nm.value()
-        dispersion_window = wavelength[-1] - wavelength[0]
-
-        HelperFunctions().write_origin(datetime, "Powerseries", temperature, integration_time, power, center_wavelength, dispersion_window, 
-                                       entrance_slit_width, exit_slit_width, wavelength, excitation_power, intensity, filepath)
-
-
+        with open(filepath, "w") as f:
+            f.write("HWP Angle (deg)\tPower (W)\n")
+            for a, p in zip(angles, powers):
+                f.write(f"{a}\t{p}\n")
 
     @QtCore.Slot()
     def _on_ps_input_update_nmeasurements_value(self):
-        n = int((self.ps_stop.value()-self.ps_start.value())/self.ps_step.value()) + 1
+        step = self.ps_step.value()
+        if step <= 0:
+            return
+        n = int((self.ps_stop.value() - self.ps_start.value()) / step) + 1
         self.n_measurements.setValue(n)
-
 
     def update_save_string(self):
         dir = self.save_directory.value()
         file = self.save_filename.value()
-        
         helper = HelperFunctions()
         filenumber = helper.get_next_file_number(dir)
+        return f"{dir}\\{filenumber}_{file}_powercalibration.txt"
 
-        new_save_string =  f"{dir}\\{filenumber}_{file}.origin"
-        # self.save_string.setValue(new_save_string)
-        return new_save_string
-    
     def check_dir_exists(self):
         filepath = self.save_directory.value()
-        if os.path.isdir(filepath):
+        if not os.path.isdir(filepath):
             os.makedirs(filepath)
-
-        
