@@ -23,6 +23,10 @@ class DashboardView(TurboComponentView, Ui_DashboardWidget):
         SFT.connect_widget_to_param(self.OutputMirror_ComboBox, component.output_mirror)
         SFT.connect_widget_to_param(self.DirectInputSlit_DoubleSpinBox, component.direct_input_slit_width)
         SFT.connect_widget_to_param(self.SideInputSlit_DoubleSpinBox, component.side_input_slit_width)
+        SFT.connect_widget_to_param(self.PiezoUp_Button, component.step_up_ActionParam)
+        SFT.connect_widget_to_param(self.PiezoDown_Button, component.step_down_ActionParam)
+        SFT.connect_widget_to_param(self.PiezoLeft_Button, component.step_left_ActionParam)
+        SFT.connect_widget_to_param(self.PiezoRight_Button, component.step_right_ActionParam)
         
     
     def setup_collapsible_groups(self):

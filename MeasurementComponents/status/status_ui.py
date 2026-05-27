@@ -16,7 +16,7 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QFrame, QGroupBox, QLabel,
-    QSizePolicy, QSpacerItem, QVBoxLayout, QWidget)
+    QPushButton, QSizePolicy, QSpacerItem, QVBoxLayout, QWidget)
 
 class Ui_StatusWidget(object):
     def setupUi(self, StatusWidget):
@@ -103,6 +103,16 @@ class Ui_StatusWidget(object):
 
         self.verticalLayout_2.addWidget(self.Temperature_Label)
 
+        self.Start_PushButton = QPushButton(self.groupBox)
+        self.Start_PushButton.setObjectName(u"Start_PushButton")
+
+        self.verticalLayout_2.addWidget(self.Start_PushButton)
+
+        self.Stop_PushButton = QPushButton(self.groupBox)
+        self.Stop_PushButton.setObjectName(u"Stop_PushButton")
+
+        self.verticalLayout_2.addWidget(self.Stop_PushButton)
+
 
         self.verticalLayout.addWidget(self.groupBox)
 
@@ -119,5 +129,7 @@ class Ui_StatusWidget(object):
         self.Power_Label.setText(QCoreApplication.translate("StatusWidget", u"1.294", None))
         self.label_4.setText(QCoreApplication.translate("StatusWidget", u"Temperature (K)", None))
         self.Temperature_Label.setText(QCoreApplication.translate("StatusWidget", u"300", None))
+        self.Start_PushButton.setText(QCoreApplication.translate("StatusWidget", u"Start", None))
+        self.Stop_PushButton.setText(QCoreApplication.translate("StatusWidget", u"Stop", None))
     # retranslateUi
 

@@ -25,6 +25,7 @@ from MeasurementComponents.dashboard import DashboardModule, DashboardView
 from MeasurementComponents.status import StatusModule, StatusView
 from MeasurementComponents.Map import MapModule
 from MeasurementComponents.Spotsize import SpotsizeModule
+from MeasurementComponents.PowerCalibration import PowerCalibrationModule
 
 
 def set_initial(param, value):
@@ -53,6 +54,7 @@ class SpecDracula(SFT.TurboControl):
         status = StatusModule(name='Status')
         map = MapModule(name="2D Map")
         spotsize = SpotsizeModule(name="Spotsize")
+        powercalibration = PowerCalibrationModule(name="Power Calibration")
 
         # Powermeter setup
         power_meter = ThorlabsPowerMeterHW(name='PM100')
@@ -71,10 +73,10 @@ class SpecDracula(SFT.TurboControl):
         # shutter.connect()
 
         # HWP setup
-        # hwp_motor = ThorlabsKDC101_PRMTZ8(name='HWP Rotation')
-        # _temp = hwp_motor.find_param_by_name('Serial number')
-        # set_initial(_temp, '27253212')  # KDC101 serial number
-        # hwp_motor.connect()
+        hwp_motor = ThorlabsKDC101_PRMTZ8(name='HWP Rotation')
+        _temp = hwp_motor.find_param_by_name('Serial number')
+        set_initial(_temp, '27253212')  # KDC101 serial number
+        hwp_motor.connect()
 
         # Piezo setup
         piezo_stage = PiezoJenaNV40_HW(name='Piezo stage')
@@ -96,16 +98,31 @@ class SpecDracula(SFT.TurboControl):
 
         photoluminescence.camera.setValue(ccd_camera)
         photoluminescence.spectrograph.setValue(spec)
-        # photoluminescence.hwp.setValue(hwp_motor)
+        photoluminescence.hwp.setValue(hwp_motor)
         photoluminescence.powermeter.setValue(power_meter)
 
         dashboard.camera.setValue(ccd_camera)
         dashboard.spectrograph.setValue(spec)
-        # dashboard.halfwaveplate.setValue(hwp_motor)
+        dashboard.halfwaveplate.setValue(hwp_motor)
+        dashboard.piezo.setValue(piezo_stage)
         dashboard.connect()
 
         spotsize.powermeter.setValue(power_meter)
         spotsize.piezo.setValue(piezo_stage)
+
+        map.camera.setValue(ccd_camera)
+        map.spectrograph.setValue(spec)
+        map.piezo.setValue(piezo_stage)
+
+        powercalibration.powermeter.setValue(power_meter)
+        powercalibration.hwp.setValue(hwp_motor)
+        powercalibration.status.setValue(status)
+
+        photoluminescence.status.setValue(status)
+
+        spotsize.status.setValue(status)
+
+        status.powermeter.setValue(power_meter)
 
 
     def setup_ui(self, main_window):

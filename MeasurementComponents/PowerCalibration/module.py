@@ -12,6 +12,7 @@ class PowerCalibrationModule(Module):
 
     hwp = SFT.ObjectParameter("HWP", SFT.TurboComponent)
     powermeter = SFT.ObjectParameter("Powermeter", SFT.TurboComponent)
+    status = SFT.ObjectParameter("Status", SFT.TurboComponent)
 
     ps_start = SFT.ObjectParameter("Power HWP Start Position", dtype=float, value=0.0, range=SFT.MinMaxRangeType(min=0.0, max=360.0, decimals=2), unit="°")
     ps_stop = SFT.ObjectParameter("Power HWP Stop Position", dtype=float, value=45.0, range=SFT.MinMaxRangeType(min=0.0, max=360.0), unit="°")
@@ -45,12 +46,23 @@ class PowerCalibrationModule(Module):
 
     def run(self):
         self._interrupted = False
+        status = self.status.value()
+        if status is not None:
+            status.pause()
+        try:
+            self._run()
+        finally:
+            if status is not None:
+                status.resume()
+
+    def _run(self):
         start = self.ps_start.value()
         stop = self.ps_stop.value()
         step = self.ps_step.value()
         hwp = self.hwp.value()
         pm = self.powermeter.value()
 
+        datetime = dt.datetime.now()
         positions = np.arange(start, stop + step * 0.5, step)
         angles = []
         powers = []
@@ -60,18 +72,28 @@ class PowerCalibrationModule(Module):
                 break
             hwp.write_angle(pos)
             sleep(0.2)
-            pm.reading.trigger_read()
+            pm.reading.trigger_read().wait(2.0)
             p = pm.reading.value()
             angles.append(pos)
             powers.append(p)
             self.angles_buffer.setValue(np.array(angles))
             self.powers_buffer.setValue(np.array(powers))
 
+        excitation_power_uw = float(np.max(powers)) * 1e6 if powers else 0.0
         filepath = self.update_save_string()
-        with open(filepath, "w") as f:
-            f.write("HWP Angle (deg)\tPower (W)\n")
-            for a, p in zip(angles, powers):
-                f.write(f"{a}\t{p}\n")
+        HelperFunctions().write_powercal_origin(
+            date=datetime,
+            temperature=0.0,
+            integration_time=0.0,
+            excitation_power_uw=excitation_power_uw,
+            center_wavelength=0.0,
+            dispersion_window=0.0,
+            entrance_slit_width=0.0,
+            exit_slit_width=0.0,
+            angles=np.array(angles),
+            powers=np.array(powers),
+            filepath=filepath,
+        )
 
     @QtCore.Slot()
     def _on_ps_input_update_nmeasurements_value(self):
@@ -86,7 +108,7 @@ class PowerCalibrationModule(Module):
         file = self.save_filename.value()
         helper = HelperFunctions()
         filenumber = helper.get_next_file_number(dir)
-        return f"{dir}\\{filenumber}_{file}_powercalibration.txt"
+        return f"{dir}\\{filenumber}_{file}_powercalibration.origin"
 
     def check_dir_exists(self):
         filepath = self.save_directory.value()

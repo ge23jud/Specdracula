@@ -29,7 +29,7 @@ class HelperFunctions():
         highest = -1
         pattern = re.compile(r'^(\d{3})')
 
-        if not os.path.isdir("/path/to/directory"):
+        if not os.path.isdir(directory):
             return "000"
 
         for filename in os.listdir(directory):
@@ -214,7 +214,108 @@ class HelperFunctions():
             lines.append(f"{wl}\t{counts}")
  
         # -- write with CRLF line endings --------------------------------------
+        with open(filepath, "w", newline="\r\n", encoding="latin-1") as fh:
+            fh.write("\n".join(lines) + "\n")
+
+
+    def write_powercal_origin(
+        self,
+        date: dt.datetime,
+        temperature: float,
+        integration_time: float,
+        excitation_power_uw: float,
+        center_wavelength: float,
+        dispersion_window: float,
+        entrance_slit_width: float,
+        exit_slit_width: float,
+        angles: np.ndarray,
+        powers: np.ndarray,
+        filepath: str,
+    ) -> None:
+        """Write a power calibration dataset to a .origin text file.
+
+        Parameters
+        ----------
+        temperature : float
+            Sample temperature in Kelvin.
+        integration_time : float
+            Reference integration time in seconds (CCD exposure at time of calibration).
+        excitation_power_uw : float
+            Reference excitation power in µW for the header line.
+        center_wavelength : float
+            Centre wavelength in nm (0 if unavailable).
+        dispersion_window : float
+            Dispersion window in nm (0 if unavailable).
+        entrance_slit_width : float
+            Entrance slit width in mm (0 if unavailable).
+        exit_slit_width : float
+            Exit slit width in mm.
+        angles : np.ndarray
+            HWP angles in degrees for each measurement step.
+        powers : np.ndarray
+            Measured power in Watts for each step.
+        filepath : str
+            Destination .origin file path.
+        """
+
+        def _fmt_ev(value: float, decimals: int = 3) -> str:
+            factor = 10 ** decimals
+            truncated = math.floor(value * factor) / factor
+            return f"{truncated:.{decimals}f}"
+
+        def _fmt_power(v: float) -> str:
+            s = f"{v:.7G}"
+            s = re.sub(r'E([+-])0*(\d)', r'E\1\2', s)
+            return s
+
+        angles = np.asarray(angles)
+        powers = np.asarray(powers)
+
+        date_str = (
+            f"{date.strftime('%A, %B')} {date.day}, {date.year}, "
+            f"{date.hour % 12 or 12}:{date.strftime('%M')} "
+            f"{'AM' if date.hour < 12 else 'PM'}"
+        )
+
+        if center_wavelength > 0:
+            center_ev = self.wavelength_energy_converter(center_wavelength)
+            lower_nm = center_wavelength - dispersion_window / 2.0
+            upper_nm = center_wavelength + dispersion_window / 2.0
+            window_ev = abs(
+                self.wavelength_energy_converter(lower_nm)
+                - self.wavelength_energy_converter(upper_nm)
+            )
+        else:
+            center_ev = 0.0
+            window_ev = 0.0
+
+        lines: list[str] = []
+
+        lines.append(f"Date:\t{date_str}\t")
+        lines.append(f"Measurement type:\tX vs Y/Power HWP position vs. Power\t")
+        lines.append(f"Temperature: \t{temperature:.3f} K\t")
+        lines.append(f"Integration time:\t{integration_time:.3f} s\t")
+        lines.append(f"Excitation power:\t{excitation_power_uw:.4f} uW\t")
+        lines.append(
+            f"Center wavelength\t{center_wavelength:.3f} nm"
+            f" / {_fmt_ev(center_ev)} eV\t"
+        )
+        lines.append(
+            f"Dispersion window:\t{dispersion_window:.3f} nm"
+            f" / {_fmt_ev(window_ev)} eV\t"
+        )
+        lines.append(f"Entrance slit width:\t{entrance_slit_width:.3f} mm\t")
+        lines.append(f"Exit slit width:\t{exit_slit_width:.3f} mm\t")
+        lines.append(f" \t\t")
+
+        lines.append(f"Energy \tExcitation power\tPowerspectrum ")
+        lines.append(f"(eV)\t(W)\t(Counts/{integration_time:.3f}s)")
+        lines.append(f"\t\t")
+
+        for angle, power in zip(angles, powers):
+            lines.append(f"{_fmt_power(power)}\t{angle:g}\t{_fmt_power(power)}")
+
         with open(filepath, "w", newline="\r\n", encoding="ascii") as fh:
             fh.write("\n".join(lines) + "\n")
 
-        
+

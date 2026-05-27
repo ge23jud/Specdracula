@@ -14,6 +14,7 @@ class PhotoluminescenceModule(Module):
     spectrograph = SFT.ObjectParameter('Spectrograph', SFT.TurboComponent)
     hwp = SFT.ObjectParameter("HWP", SFT.TurboComponent)
     powermeter = SFT.ObjectParameter("Powermeter", SFT.TurboComponent)
+    status = SFT.ObjectParameter("Status", SFT.TurboComponent)
 
     y_scale = SFT.ObjectParameter("Y scale", dtype=str, value="Linear", range=SFT.ChoiceRangeType(**{"Linear": 0, "Logarithmic": 1}), doc="Y-axis scale type")
     x_label = SFT.ObjectParameter("X Label", dtype=str, value="Wavelength", range=SFT.ChoiceRangeType(**{"Energy": 0, "Wavelength": 1}), doc="X-label")
@@ -81,7 +82,16 @@ class PhotoluminescenceModule(Module):
     
     def save_single(self):
         """Save currently displayed PL Snapshot"""
+        status = self.status.value()
+        if status is not None:
+            status.pause()
+        try:
+            self._save_single()
+        finally:
+            if status is not None:
+                status.resume()
 
+    def _save_single(self):
         cam = self.camera.value()
         spec = self.spectrograph.value()
         pm = self.powermeter.value()
@@ -101,8 +111,8 @@ class PhotoluminescenceModule(Module):
         wavelength = self.wavelength_nm.value()
         dispersion_window = wavelength[-1] - wavelength[0]
 
-        HelperFunctions().write_origin(datetime, "Powerseries", temperature, integration_time, power, center_wavelength, dispersion_window, 
-                                       entrance_slit_width, exit_slit_width, wavelength, excitation_power, intensity, filepath)
+        HelperFunctions().write_origin(datetime, "Powerseries", temperature, integration_time, power, center_wavelength, dispersion_window,
+                                       entrance_slit_width, exit_slit_width, wavelength, excitation_power, np.zeros(1), intensity, filepath)
 
 
     def acquire_continuous(self):
@@ -202,6 +212,16 @@ class PhotoluminescenceModule(Module):
 
 
     def powerseries(self):
+        status = self.status.value()
+        if status is not None:
+            status.pause()
+        try:
+            self._powerseries()
+        finally:
+            if status is not None:
+                status.resume()
+
+    def _powerseries(self):
         start = self.ps_start.value()
         stop = self.ps_stop.value()
         step = self.ps_step.value()
@@ -235,7 +255,7 @@ class PhotoluminescenceModule(Module):
         for i in range(self.n_measurements.value()):    
 
             hwp.write_angle(start + i*step)
-            #print("angle:", start+i*step)
+            data_angle[i] = start + i*step
             self._acquire(self.intensity_counts_powerseries, self.wavelength_nm, self.averaging.value(), False)
             pm.reading.trigger_read()
             power = pm.reading.value()
@@ -250,8 +270,8 @@ class PhotoluminescenceModule(Module):
         excitation_power = self.powers.value()
         power = excitation_power[0]
 
-        HelperFunctions().write_origin(datetime, "Powerseries", temperature, integration_time, power, center_wavelength, dispersion_window, 
-                                       entrance_slit_width, exit_slit_width, wavelength, excitation_power, intensity, filepath)
+        HelperFunctions().write_origin(datetime, "Powerseries", temperature, integration_time, power, center_wavelength, dispersion_window,
+                                       entrance_slit_width, exit_slit_width, wavelength, excitation_power, data_angle, intensity, filepath)
 
 
 
@@ -281,7 +301,7 @@ class PhotoluminescenceModule(Module):
     
     def check_dir_exists(self):
         filepath = self.save_directory.value()
-        if os.path.isdir(filepath):
+        if not os.path.isdir(filepath):
             os.makedirs(filepath)
 
         
