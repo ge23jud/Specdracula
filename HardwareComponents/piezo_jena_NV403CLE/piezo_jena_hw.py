@@ -2,6 +2,7 @@ import time
 
 import numpy as np
 import pyvisa
+from PySide6.QtCore import QMutexLocker
 
 import ScopeFoundry as SFT
 
@@ -150,14 +151,17 @@ class PiezoJenaNV40_HW(SFT.HardwareModule):
         self.position_z.trigger_read()
 
     def __ask(self, message):
-        answer = self.piezo.query(message)[1:]
+        with QMutexLocker(self.device_mutex):
+            answer = self.piezo.query(message)[1:]
         return answer
 
     def __write(self, message):
-        self.piezo.write(message)
+        with QMutexLocker(self.device_mutex):
+            self.piezo.write(message)
 
     def __read(self):
-        answer = self.piezo.read()[1:]
+        with QMutexLocker(self.device_mutex):
+            answer = self.piezo.read()[1:]
         return answer
 
     def __execute(self, command: str, channel=None, value=None, style='ask'):

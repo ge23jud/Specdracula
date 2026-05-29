@@ -31,6 +31,7 @@ class PhotoluminescenceModule(Module):
     powers = SFT.ObjectParameter("Powers", dtype=np.ndarray, value=None)
     repetitions = SFT.ObjectParameter('Repetitions', dtype=int, value=1, readonly=False)
     averaging = SFT.ObjectParameter('Averaging', dtype=bool, value=True, readonly=False)
+    pixel_correction_enabled = SFT.ObjectParameter('Pixel Correction', dtype=bool, value=False)
     #integration_time = SFT.ObjectParameter()
     save_directory = SFT.ObjectParameter("Save Directory", dtype=str, value=f"C:\Measurements\{dt.date.today().__str__().replace("-", "")}")
     save_filename = SFT.ObjectParameter("Save Filename", dtype=str, value="")
@@ -46,7 +47,10 @@ class PhotoluminescenceModule(Module):
 
     def __init__(self, name=None, parent=None):
         super().__init__(name=name, parent=parent)
-   
+
+        _corr_path = os.path.join(os.path.dirname(__file__), 'pixel_correction_2.txt')
+        self._pixel_correction = np.loadtxt(_corr_path)[::-1]  # file is energy order; reverse for wavelength/pixel order
+
         self.ps_start.sigValueChanged.connect(self._on_ps_input_update_nmeasurements_value)
         self.ps_stop.sigValueChanged.connect(self._on_ps_input_update_nmeasurements_value)
         self.ps_step.sigValueChanged.connect(self._on_ps_input_update_nmeasurements_value)
@@ -67,6 +71,7 @@ class PhotoluminescenceModule(Module):
         #self.file_exporters["HDF files (*.h5)"] = AndorCCDReadoutMeasure.to_hdf
 
         self.wavelength_nm.sigValueChanged.connect(self._update_energy_array)
+        self.spectrograph.sigValueChanged.connect(self._on_spectrograph_set)
 
 
     def acquire_single(self):
@@ -180,6 +185,8 @@ class PhotoluminescenceModule(Module):
                 new_counts = cam.acquire_wait.result[0].copy()
                 if new_counts is None:
                     raise Exception('camera returned no counts yet. you need to wait for acquisition')
+                if self.pixel_correction_enabled.value():
+                    new_counts = new_counts / self._pixel_correction
                 if averaging:
                     if counts is None:
                         # first iteration
@@ -280,6 +287,21 @@ class PhotoluminescenceModule(Module):
         n = int((self.ps_stop.value()-self.ps_start.value())/self.ps_step.value()) + 1
         self.n_measurements.setValue(n)
 
+
+    @QtCore.Slot()
+    def _on_spectrograph_set(self):
+        spec = self.spectrograph.value()
+        if spec is not None:
+            spec.wavelength_calib.sigValueChanged.connect(self._on_wavelength_calib_changed)
+
+    @QtCore.Slot()
+    def _on_wavelength_calib_changed(self):
+        spec = self.spectrograph.value()
+        if spec is None:
+            return
+        calib = spec.wavelength_calib.value()
+        if calib is not None:
+            self.wavelength_nm.setValue(np.array(calib))
 
     @QtCore.Slot()
     def _update_energy_array(self):

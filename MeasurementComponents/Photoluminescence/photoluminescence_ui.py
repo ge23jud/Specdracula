@@ -15,9 +15,10 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QAbstractSpinBox, QApplication, QComboBox, QDoubleSpinBox,
-    QGridLayout, QHBoxLayout, QLabel, QLineEdit,
-    QPushButton, QSizePolicy, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QAbstractSpinBox, QApplication, QCheckBox, QComboBox,
+    QDoubleSpinBox, QGridLayout, QHBoxLayout, QLabel,
+    QLineEdit, QPushButton, QSizePolicy, QVBoxLayout,
+    QWidget)
 
 from pyqtgraph import PlotWidget
 
@@ -183,11 +184,6 @@ class Ui_PhotoluminescenceWidget(object):
         self.widget_2.setSizePolicy(sizePolicy)
         self.gridLayout_2 = QGridLayout(self.widget_2)
         self.gridLayout_2.setObjectName(u"gridLayout_2")
-        self.label = QLabel(self.widget_2)
-        self.label.setObjectName(u"label")
-
-        self.gridLayout_2.addWidget(self.label, 0, 0, 1, 1)
-
         self.Filename_LineEdit = QLineEdit(self.widget_2)
         self.Filename_LineEdit.setObjectName(u"Filename_LineEdit")
 
@@ -198,10 +194,20 @@ class Ui_PhotoluminescenceWidget(object):
 
         self.gridLayout_2.addWidget(self.label_2, 1, 0, 1, 1)
 
+        self.label = QLabel(self.widget_2)
+        self.label.setObjectName(u"label")
+
+        self.gridLayout_2.addWidget(self.label, 0, 0, 1, 1)
+
         self.Directory_LineEdit = QLineEdit(self.widget_2)
         self.Directory_LineEdit.setObjectName(u"Directory_LineEdit")
 
         self.gridLayout_2.addWidget(self.Directory_LineEdit, 0, 1, 1, 1)
+
+        self.PxlCorrection_checkBox = QCheckBox(self.widget_2)
+        self.PxlCorrection_checkBox.setObjectName(u"PxlCorrection_checkBox")
+
+        self.gridLayout_2.addWidget(self.PxlCorrection_checkBox, 2, 1, 1, 1)
 
 
         self.horizontalLayout_2.addWidget(self.widget_2)
@@ -282,8 +288,9 @@ class Ui_PhotoluminescenceWidget(object):
         self.StartPS_PushButton.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Start", None))
         self.StopPS_PushButton.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Stop", None))
         self.PsStart_DoubleSpinBox.setSuffix(QCoreApplication.translate("PhotoluminescenceWidget", u"\u00b0", None))
-        self.label.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Directory", None))
         self.label_2.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Filename", None))
+        self.label.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Directory", None))
+        self.PxlCorrection_checkBox.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Apply Pixel Correction (preliminary!)", None))
         self.xlabel_ComboBox.setItemText(0, QCoreApplication.translate("PhotoluminescenceWidget", u"Energy", None))
         self.xlabel_ComboBox.setItemText(1, QCoreApplication.translate("PhotoluminescenceWidget", u"Wavelength", None))
 

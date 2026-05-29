@@ -29,6 +29,7 @@ class PhotoluminescenceView(TurboComponentView, Ui_PhotoluminescenceWidget):
         SFT.connect_widget_to_param(self.StartLivePL_PushButton, component.continuous_ActionParam)
         SFT.connect_widget_to_param(self.StopLivePL_PushButton, component.interrupt_ActionParam)
         SFT.connect_widget_to_param(self.StartPS_PushButton, component.powerseries_ActionParam)
+        SFT.connect_widget_to_param(self.PxlCorrection_checkBox, component.pixel_correction_enabled)
 
 
         component.x_label.sigValueChanged.connect(self._on_xlabel_changed)
