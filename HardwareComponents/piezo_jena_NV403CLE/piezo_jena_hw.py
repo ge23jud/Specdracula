@@ -2,7 +2,7 @@ import time
 
 import numpy as np
 import pyvisa
-from PySide6.QtCore import QMutexLocker
+from PySide6.QtCore import QMutex, QMutexLocker
 
 import ScopeFoundry as SFT
 
@@ -41,6 +41,7 @@ class PiezoJenaNV40_HW(SFT.HardwareModule):
     def __init__(self, *args, **kwargs):
         SFT.HardwareModule.__init__(self, *args, **kwargs)
         self.piezo = None
+        self.device_mutex = QMutex()
 
     def connect(self):
         rm = pyvisa.ResourceManager()
