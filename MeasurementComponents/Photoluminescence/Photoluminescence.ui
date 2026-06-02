@@ -34,7 +34,23 @@
       </property>
       <item>
        <widget class="QWidget" name="widget_4" native="true">
-        <layout class="QVBoxLayout" name="verticalLayout_11" stretch="0,0">
+        <layout class="QVBoxLayout" name="verticalLayout_11" stretch="0,0,0">
+         <item>
+          <widget class="QLabel" name="Status_Label">
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>18</height>
+            </size>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
          <item>
           <widget class="PlotWidget" name="plot_widget" native="true">
            <property name="enabled">
@@ -270,6 +286,61 @@
              </widget>
             </item>
             <item>
+             <widget class="QWidget" name="widget_5" native="true">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <layout class="QGridLayout" name="gridLayout_4">
+               <item row="2" column="0">
+                <widget class="QLabel" name="label_4">
+                 <property name="text">
+                  <string>Max Energy</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QDoubleSpinBox" name="MinEnergy_DoubleSpinBox"/>
+               </item>
+               <item row="0" column="0">
+                <widget class="QCheckBox" name="BandwidthSweepEnable_CheckBox">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="text">
+                  <string>Bandwidth Seep Enable</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QLabel" name="label_3">
+                 <property name="text">
+                  <string>Min. Energy</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="1">
+                <widget class="QDoubleSpinBox" name="MaxEnergy_DoubleSpinBox"/>
+               </item>
+               <item row="3" column="1">
+                <widget class="QDoubleSpinBox" name="Overlap_DoubleSpinBox"/>
+               </item>
+               <item row="3" column="0">
+                <widget class="QLabel" name="label_5">
+                 <property name="text">
+                  <string>Overlap</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
              <widget class="QWidget" name="widget_2" native="true">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -397,6 +468,57 @@
                  <item>
                   <property name="text">
                    <string>Logarithmic</string>
+                  </property>
+                 </item>
+                </widget>
+               </item>
+               <item row="4" column="0">
+                <widget class="QLabel" name="label_25">
+                 <property name="text">
+                  <string>Colors</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignmentFlag::AlignCenter</set>
+                 </property>
+                </widget>
+               </item>
+               <item row="4" column="1">
+                <widget class="QComboBox" name="ColorScheme_ComboBox">
+                 <property name="minimumSize">
+                  <size>
+                   <width>150</width>
+                   <height>0</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>100</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
+                 <item>
+                  <property name="text">
+                   <string>Viridis</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>Spectral</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>CoolWarm</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>Warm</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>Turbo</string>
                   </property>
                  </item>
                 </widget>

@@ -6,6 +6,36 @@ from ScopeFoundry import Module, ObjectParameter
 from helperfunctions import HelperFunctions
 import os
 
+_HC_EV_NM = 1239.84193  # h·c in eV·nm
+
+
+def _upper_edge_ev(E_c_ev, W_nm):
+    """Highest-energy (shortest-wavelength) edge of a window in eV."""
+    return _HC_EV_NM / (_HC_EV_NM / E_c_ev - W_nm / 2)
+
+
+def _lower_edge_ev(E_c_ev, W_nm):
+    """Lowest-energy (longest-wavelength) edge of a window in eV."""
+    return _HC_EV_NM / (_HC_EV_NM / E_c_ev + W_nm / 2)
+
+
+def _center_from_upper_ev(E_upper_ev, W_nm):
+    """Center energy (eV) whose upper edge lands at E_upper_ev."""
+    return _HC_EV_NM / (_HC_EV_NM / E_upper_ev + W_nm / 2)
+
+
+def _greedy_centers(E_start_upper, E_stop_lower, overlap, W_nm):
+    """Place windows greedily from high to low energy.
+
+    Window 0 upper edge = E_start_upper.  Each subsequent window's upper edge
+    = previous lower edge + overlap.  Stops when lower edge <= E_stop_lower.
+    """
+    centers = [_center_from_upper_ev(E_start_upper, W_nm)]
+    while _lower_edge_ev(centers[-1], W_nm) > E_stop_lower:
+        next_upper = _lower_edge_ev(centers[-1], W_nm) + overlap
+        centers.append(_center_from_upper_ev(next_upper, W_nm))
+    return centers
+
 
 class PhotoluminescenceModule(Module):
 
@@ -17,7 +47,7 @@ class PhotoluminescenceModule(Module):
     status = SFT.ObjectParameter("Status", SFT.TurboComponent)
 
     y_scale = SFT.ObjectParameter("Y scale", dtype=str, value="Linear", range=SFT.ChoiceRangeType(**{"Linear": 0, "Logarithmic": 1}), doc="Y-axis scale type")
-    x_label = SFT.ObjectParameter("X Label", dtype=str, value="Wavelength", range=SFT.ChoiceRangeType(**{"Energy": 0, "Wavelength": 1}), doc="X-label")
+    x_label = SFT.ObjectParameter("X Label", dtype=str, value="Energy", range=SFT.ChoiceRangeType(**{"Energy": 0, "Wavelength": 1}), doc="X-label")
     ps_start = SFT.ObjectParameter("Power HWP Start Position", dtype=float, value=0.0, range=SFT.MinMaxRangeType(min=0.0, max=360.0, decimals=2), unit="°" )
     ps_stop = SFT.ObjectParameter("Power HWP Stop Position", dtype=float, value=45.0, range=SFT.MinMaxRangeType(min=0.0, max=360.0), unit="°")
     ps_step = SFT.ObjectParameter("Power HWP Step", dtype=float, value=1.0, range=SFT.MinMaxRangeType(min=0.0, max=360.0), unit="°")
@@ -28,10 +58,23 @@ class PhotoluminescenceModule(Module):
     intensity_counts = SFT.ObjectParameter('Intensity (counts)', dtype=np.ndarray, value=None, readonly=True)
     intensity_counts_powerseries = SFT.ObjectParameter("Intensities for Powerseries", dtype=np.ndarray, value=None, readonly=True)
     intensity_counts_powerseries_complete = SFT.ObjectParameter("Intensities for Powerseries Complete Array", dtype=np.ndarray, value=None, readonly=True)
+    stitch_edge_nm = SFT.ObjectParameter('Stitch Edges', dtype=np.ndarray, value=None, readonly=True)
+    measurement_running = SFT.ObjectParameter('Measurement Running', dtype=bool, value=False, readonly=True)
     powers = SFT.ObjectParameter("Powers", dtype=np.ndarray, value=None)
     repetitions = SFT.ObjectParameter('Repetitions', dtype=int, value=1, readonly=False)
     averaging = SFT.ObjectParameter('Averaging', dtype=bool, value=True, readonly=False)
     pixel_correction_enabled = SFT.ObjectParameter('Pixel Correction', dtype=bool, value=False)
+    colorscheme = SFT.ObjectParameter(
+        'Color Scheme', dtype=str, value='Viridis',
+        range=SFT.ChoiceRangeType(**{'Viridis': 0, 'Spectral': 1, 'CoolWarm': 2, 'Warm': 3, 'Turbo': 4})
+    )
+    bs_enable = SFT.ObjectParameter('Bandwidth Sweep Enable', dtype=bool, value=False)
+    bs_min_energy = SFT.ObjectParameter('BS Min Energy', dtype=float, value=1.3, unit='eV',
+                                        range=SFT.MinMaxRangeType(min=0.1, max=6.0, decimals=3))
+    bs_max_energy = SFT.ObjectParameter('BS Max Energy', dtype=float, value=1.8, unit='eV',
+                                        range=SFT.MinMaxRangeType(min=0.1, max=6.0, decimals=3))
+    bs_overlap = SFT.ObjectParameter('BS Overlap', dtype=float, value=0.05, unit='eV',
+                                     range=SFT.MinMaxRangeType(min=0.0, max=1.0, decimals=3))
     #integration_time = SFT.ObjectParameter()
     save_directory = SFT.ObjectParameter("Save Directory", dtype=str, value=f"C:\Measurements\{dt.date.today().__str__().replace("-", "")}")
     save_filename = SFT.ObjectParameter("Save Filename", dtype=str, value="")
@@ -219,6 +262,7 @@ class PhotoluminescenceModule(Module):
 
 
     def powerseries(self):
+        self.measurement_running.setValue(True)
         status = self.status.value()
         if status is not None:
             status.pause()
@@ -227,8 +271,64 @@ class PhotoluminescenceModule(Module):
         finally:
             if status is not None:
                 status.resume()
+            self.measurement_running.setValue(False)
 
     def _powerseries(self):
+        if self.bs_enable.value():
+            self._bandwidth_sweep_powerseries()
+        else:
+            self._single_powerseries()
+
+    def _bandwidth_sweep_powerseries(self):
+        spec = self.spectrograph.value()
+        if spec is None:
+            raise Exception('Spectrograph not connected.')
+
+        E_min = self.bs_min_energy.value()
+        E_max = self.bs_max_energy.value()
+        overlap = self.bs_overlap.value()
+
+        if E_max <= E_min:
+            raise ValueError('BS Max Energy must be greater than BS Min Energy.')
+
+        # W_nm is constant for a given grating+detector; get it from the current calibration
+        wl = self.get_wavelength_calibration()  # nm, ascending (wl[0]=short λ, wl[-1]=long λ)
+        W_nm = wl[-1] - wl[0]
+
+        # Validate overlap against the window at E_max (narrowest window in the range)
+        W_ev_at_max = _upper_edge_ev(E_max, W_nm) - _lower_edge_ev(E_max, W_nm)
+        if overlap >= W_ev_at_max:
+            raise ValueError(
+                f'Overlap ({overlap:.3f} eV) must be less than the window width at E_max '
+                f'({W_ev_at_max:.3f} eV).')
+
+        # Pass 1: greedy placement with upper edge of window 0 = E_max (no excess at top yet)
+        centers_pass1 = _greedy_centers(E_max, E_min, overlap, W_nm)
+        bottom_pass1 = _lower_edge_ev(centers_pass1[-1], W_nm)
+
+        # Excess: pass 1 has 0 excess at top, and (E_min - bottom_pass1) excess at bottom.
+        # Distribute equally: shift the whole sweep up by excess_per_side.
+        excess_per_side = (E_min - bottom_pass1) / 2.0
+
+        # Pass 2: redo with upper edge = E_max + excess_per_side
+        centers = _greedy_centers(E_max + excess_per_side, E_min - excess_per_side, overlap, W_nm)
+
+        print(f'Bandwidth sweep: {len(centers)} positions, W_nm={W_nm:.1f} nm, overlap={overlap:.3f} eV')
+        print(f'Center energies (eV): {[f"{c:.4f}" for c in centers]}')
+
+        for E_center in centers:
+            if self._interrupted:
+                break
+            λ_m = _HC_EV_NM / E_center * 1e-9
+            spec.center_wavelength.write_to_device(λ_m)
+            spec.center_wavelength.trigger_read().wait(30.0)
+            spec.wavelength_calib.trigger_read().wait(5.0)
+            self._single_powerseries()
+            wl = self.wavelength_nm.value()
+            if wl is not None and len(wl) >= 2:
+                self.stitch_edge_nm.setValue(np.array([wl[0], wl[-1]]))
+
+    def _single_powerseries(self):
         start = self.ps_start.value()
         stop = self.ps_stop.value()
         step = self.ps_step.value()

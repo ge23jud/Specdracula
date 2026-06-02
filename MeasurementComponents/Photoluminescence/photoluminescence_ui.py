@@ -48,6 +48,12 @@ class Ui_PhotoluminescenceWidget(object):
         sizePolicy.setHeightForWidth(self.plot_widget.sizePolicy().hasHeightForWidth())
         self.plot_widget.setSizePolicy(sizePolicy)
 
+        self.Status_Label = QLabel(self.widget_4)
+        self.Status_Label.setObjectName(u"Status_Label")
+        self.Status_Label.setMaximumHeight(18)
+        self.Status_Label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+
+        self.verticalLayout_11.addWidget(self.Status_Label)
         self.verticalLayout_11.addWidget(self.plot_widget)
 
         self.SaveData = QWidget(self.widget_4)
@@ -178,6 +184,55 @@ class Ui_PhotoluminescenceWidget(object):
 
         self.horizontalLayout_2.addWidget(self.widget_13)
 
+        self.widget_5 = QWidget(self.SaveData)
+        self.widget_5.setObjectName(u"widget_5")
+        sizePolicy5 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        sizePolicy5.setHorizontalStretch(0)
+        sizePolicy5.setVerticalStretch(0)
+        sizePolicy5.setHeightForWidth(self.widget_5.sizePolicy().hasHeightForWidth())
+        self.widget_5.setSizePolicy(sizePolicy5)
+        self.gridLayout_4 = QGridLayout(self.widget_5)
+        self.gridLayout_4.setObjectName(u"gridLayout_4")
+        self.label_4 = QLabel(self.widget_5)
+        self.label_4.setObjectName(u"label_4")
+
+        self.gridLayout_4.addWidget(self.label_4, 2, 0, 1, 1)
+
+        self.MinEnergy_DoubleSpinBox = QDoubleSpinBox(self.widget_5)
+        self.MinEnergy_DoubleSpinBox.setObjectName(u"MinEnergy_DoubleSpinBox")
+
+        self.gridLayout_4.addWidget(self.MinEnergy_DoubleSpinBox, 1, 1, 1, 1)
+
+        self.BandwidthSweepEnable_CheckBox = QCheckBox(self.widget_5)
+        self.BandwidthSweepEnable_CheckBox.setObjectName(u"BandwidthSweepEnable_CheckBox")
+        sizePolicy4.setHeightForWidth(self.BandwidthSweepEnable_CheckBox.sizePolicy().hasHeightForWidth())
+        self.BandwidthSweepEnable_CheckBox.setSizePolicy(sizePolicy4)
+
+        self.gridLayout_4.addWidget(self.BandwidthSweepEnable_CheckBox, 0, 0, 1, 1)
+
+        self.label_3 = QLabel(self.widget_5)
+        self.label_3.setObjectName(u"label_3")
+
+        self.gridLayout_4.addWidget(self.label_3, 1, 0, 1, 1)
+
+        self.MaxEnergy_DoubleSpinBox = QDoubleSpinBox(self.widget_5)
+        self.MaxEnergy_DoubleSpinBox.setObjectName(u"MaxEnergy_DoubleSpinBox")
+
+        self.gridLayout_4.addWidget(self.MaxEnergy_DoubleSpinBox, 2, 1, 1, 1)
+
+        self.Overlap_DoubleSpinBox = QDoubleSpinBox(self.widget_5)
+        self.Overlap_DoubleSpinBox.setObjectName(u"Overlap_DoubleSpinBox")
+
+        self.gridLayout_4.addWidget(self.Overlap_DoubleSpinBox, 3, 1, 1, 1)
+
+        self.label_5 = QLabel(self.widget_5)
+        self.label_5.setObjectName(u"label_5")
+
+        self.gridLayout_4.addWidget(self.label_5, 3, 0, 1, 1)
+
+
+        self.horizontalLayout_2.addWidget(self.widget_5)
+
         self.widget_2 = QWidget(self.SaveData)
         self.widget_2.setObjectName(u"widget_2")
         sizePolicy.setHeightForWidth(self.widget_2.sizePolicy().hasHeightForWidth())
@@ -214,11 +269,11 @@ class Ui_PhotoluminescenceWidget(object):
 
         self.widget_3 = QWidget(self.SaveData)
         self.widget_3.setObjectName(u"widget_3")
-        sizePolicy5 = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
-        sizePolicy5.setHorizontalStretch(0)
-        sizePolicy5.setVerticalStretch(0)
-        sizePolicy5.setHeightForWidth(self.widget_3.sizePolicy().hasHeightForWidth())
-        self.widget_3.setSizePolicy(sizePolicy5)
+        sizePolicy6 = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        sizePolicy6.setHorizontalStretch(0)
+        sizePolicy6.setVerticalStretch(0)
+        sizePolicy6.setHeightForWidth(self.widget_3.sizePolicy().hasHeightForWidth())
+        self.widget_3.setSizePolicy(sizePolicy6)
         self.widget_3.setMinimumSize(QSize(200, 0))
         self.gridLayout_3 = QGridLayout(self.widget_3)
         self.gridLayout_3.setObjectName(u"gridLayout_3")
@@ -254,6 +309,24 @@ class Ui_PhotoluminescenceWidget(object):
 
         self.gridLayout_3.addWidget(self.yscale_ComboBox, 2, 1, 1, 1)
 
+        self.label_25 = QLabel(self.widget_3)
+        self.label_25.setObjectName(u"label_25")
+        self.label_25.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_3.addWidget(self.label_25, 4, 0, 1, 1)
+
+        self.ColorScheme_ComboBox = QComboBox(self.widget_3)
+        self.ColorScheme_ComboBox.addItem("")
+        self.ColorScheme_ComboBox.addItem("")
+        self.ColorScheme_ComboBox.addItem("")
+        self.ColorScheme_ComboBox.addItem("")
+        self.ColorScheme_ComboBox.addItem("")
+        self.ColorScheme_ComboBox.setObjectName(u"ColorScheme_ComboBox")
+        self.ColorScheme_ComboBox.setMinimumSize(QSize(150, 0))
+        self.ColorScheme_ComboBox.setMaximumSize(QSize(100, 16777215))
+
+        self.gridLayout_3.addWidget(self.ColorScheme_ComboBox, 4, 1, 1, 1)
+
 
         self.horizontalLayout_2.addWidget(self.widget_3)
 
@@ -288,6 +361,10 @@ class Ui_PhotoluminescenceWidget(object):
         self.StartPS_PushButton.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Start", None))
         self.StopPS_PushButton.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Stop", None))
         self.PsStart_DoubleSpinBox.setSuffix(QCoreApplication.translate("PhotoluminescenceWidget", u"\u00b0", None))
+        self.label_4.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Max Energy", None))
+        self.BandwidthSweepEnable_CheckBox.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Bandwidth Seep Enable", None))
+        self.label_3.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Min. Energy", None))
+        self.label_5.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Overlap", None))
         self.label_2.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Filename", None))
         self.label.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Directory", None))
         self.PxlCorrection_checkBox.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Apply Pixel Correction (preliminary!)", None))
@@ -298,6 +375,13 @@ class Ui_PhotoluminescenceWidget(object):
         self.label_24.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"X-axis", None))
         self.yscale_ComboBox.setItemText(0, QCoreApplication.translate("PhotoluminescenceWidget", u"Linear", None))
         self.yscale_ComboBox.setItemText(1, QCoreApplication.translate("PhotoluminescenceWidget", u"Logarithmic", None))
+        self.Status_Label.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"", None))
+        self.label_25.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Colors", None))
+        self.ColorScheme_ComboBox.setItemText(0, QCoreApplication.translate("PhotoluminescenceWidget", u"Viridis", None))
+        self.ColorScheme_ComboBox.setItemText(1, QCoreApplication.translate("PhotoluminescenceWidget", u"Spectral", None))
+        self.ColorScheme_ComboBox.setItemText(2, QCoreApplication.translate("PhotoluminescenceWidget", u"CoolWarm", None))
+        self.ColorScheme_ComboBox.setItemText(3, QCoreApplication.translate("PhotoluminescenceWidget", u"Warm", None))
+        self.ColorScheme_ComboBox.setItemText(4, QCoreApplication.translate("PhotoluminescenceWidget", u"Turbo", None))
 
     # retranslateUi
 
