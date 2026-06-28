@@ -31,6 +31,7 @@ from MeasurementComponents.PowerCalibration import PowerCalibrationModule
 def set_initial(param, value):
     """Set initial value and target value of a parameter.
     
+    
     TODO This is a hack, and should be part of ObjectParameter
     or elsewhere.
     """
@@ -39,6 +40,7 @@ def set_initial(param, value):
         param.target_value.setValue(value)
     param.setValue(value)
     param.setDefault(value)
+
 
 
 class SpecDracula(SFT.TurboControl):
@@ -59,7 +61,7 @@ class SpecDracula(SFT.TurboControl):
         # Powermeter setup
         power_meter = ThorlabsPowerMeterHW(name='PM100')
         _temp = power_meter.find_param_by_name('Port')
-        set_initial(_temp, 'ASRL19::INSTR')
+        set_initial(_temp, 'ASRL14::INSTR')
         _temp = power_meter.find_param_by_name('Friendly name')
         set_initial(_temp, 'Powermeter')
         power_meter.connect()
