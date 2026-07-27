@@ -51,7 +51,10 @@ class PhotoluminescenceModule(Module):
     ps_start = SFT.ObjectParameter("Power HWP Start Position", dtype=float, value=0.0, range=SFT.MinMaxRangeType(min=0.0, max=360.0, decimals=2), unit="°" )
     ps_stop = SFT.ObjectParameter("Power HWP Stop Position", dtype=float, value=45.0, range=SFT.MinMaxRangeType(min=0.0, max=360.0), unit="°")
     ps_step = SFT.ObjectParameter("Power HWP Step", dtype=float, value=1.0, range=SFT.MinMaxRangeType(min=0.0, max=360.0), unit="°")
+    ps_log_steps = SFT.ObjectParameter("Log Steps", dtype=bool, value=False)
+    powercal_filepath = SFT.ObjectParameter("Power Calibration File", dtype=str, value="")
     n_measurements = SFT.ObjectParameter("N Measurements", dtype=int, value=0)
+    current_angles = SFT.ObjectParameter("Current Sweep Angles", dtype=np.ndarray, value=None, readonly=True)
     extra_timeout = SFT.ObjectParameter('Acquisition timeout', dtype=float, unit='s', value=3.0)
     wavelength_nm = SFT.ObjectParameter('Wavelength', dtype=np.ndarray, unit='nm', value=None, readonly=True)
     energy_ev = SFT.ObjectParameter("Energy", dtype=np.ndarray, unit="eV", value=None, readonly=True)
@@ -149,13 +152,14 @@ class PhotoluminescenceModule(Module):
         datetime = dt.datetime.now()
         temperature = 0 # to implement
         integration_time = cam.exposure.value()
-        pm.reading.trigger_read()
+        pm.reading.trigger_read().wait(2.0)
         power = pm.reading.value() * 1e3 # convert to mW
         center_wavelength = spec.center_wavelength.value() * 1e9
+        center_energy = HelperFunctions().wavelength_energy_converter(center_wavelength)
         entrance_slit_width = spec.entrance_slit_direct.value() * 1e3 # convert to mm
         exit_slit_width = 0
         excitation_power = np.zeros(1)
-        filepath = self.update_save_string()
+        filepath = self.update_save_string(integration_time, center_energy)
 
         intensity = self.intensity_counts.value().T
         wavelength = self.wavelength_nm.value()
@@ -343,22 +347,90 @@ class PhotoluminescenceModule(Module):
             self._sweep_filenumber = None
             self._sweep_index = None
 
+    def _log_power_angles(self, start_angle, stop_angle, n):
+        """HWP angles for `n` measurements whose *powers* are log-spaced between
+        the powers at `start_angle` and `stop_angle`.
+
+        Both directions (angle -> power to find the sweep's endpoints, and
+        power -> angle to find the commanded angles) are interpolated directly
+        against the measured power-calibration curve rather than an assumed
+        closed-form shape, so this follows whatever the true HWP + polarizer
+        response actually is.
+        """
+        filepath = self.powercal_filepath.value()
+        if not filepath:
+            raise ValueError('Select a power calibration file to use logarithmic steps.')
+        cal_angles, cal_powers = HelperFunctions().read_powercal_origin(filepath)
+        if len(cal_powers) == 0:
+            raise ValueError(f'No calibration data found in {filepath}.')
+
+        angle_order = np.argsort(cal_angles)
+        angles_sorted = cal_angles[angle_order]
+        powers_sorted = cal_powers[angle_order]
+        hwp_min_angle = float(angles_sorted[np.argmin(powers_sorted)])
+
+        # Power is only a single-valued (invertible) function of angle on one
+        # side of the calibration's minimum -- a sweep spanning both sides would
+        # make the same power correspond to two different angles. Restrict to
+        # the branch containing ps_stop (the sweep's far endpoint); if ps_start
+        # falls on the other side of hwp_min it clamps to p_min via np.interp's
+        # normal out-of-range clamping, since that's the true achievable floor.
+        if stop_angle >= hwp_min_angle:
+            branch_mask = angles_sorted >= hwp_min_angle
+        else:
+            branch_mask = angles_sorted <= hwp_min_angle
+        branch_angles = angles_sorted[branch_mask]
+        branch_powers = powers_sorted[branch_mask]
+
+        if not (branch_angles[0] <= start_angle <= branch_angles[-1]):
+            print(f'Warning: ps_start ({start_angle}°) is outside the calibrated '
+                  f'angle range on this side of hwp_min ({hwp_min_angle:g}°); clamping.')
+        if not (branch_angles[0] <= stop_angle <= branch_angles[-1]):
+            print(f'Warning: ps_stop ({stop_angle}°) is outside the calibrated '
+                  f'angle range on this side of hwp_min ({hwp_min_angle:g}°); clamping.')
+
+        p_start = float(np.interp(start_angle, branch_angles, branch_powers))
+        p_stop = float(np.interp(stop_angle, branch_angles, branch_powers))
+
+        # np.geomspace silently returns nan for every interior point if its two
+        # endpoints don't share a sign; a calibration's raw minimum can read at/
+        # below 0 from powermeter noise near extinction, so floor just above 0.
+        p_min = float(np.min(cal_powers))
+        p_max = float(np.max(cal_powers))
+        floor = max(p_min, p_max * 1e-6, 1e-12)
+        target_powers = np.geomspace(max(p_start, floor), max(p_stop, floor), n)
+
+        # power -> angle, inverting the same branch (sorted by power so
+        # np.interp's monotonic-x requirement is satisfied).
+        power_order = np.argsort(branch_powers)
+        powers_by_power = branch_powers[power_order]
+        angles_by_power = branch_angles[power_order]
+        return np.interp(target_powers, powers_by_power, angles_by_power)
+
     def _single_powerseries(self):
         start = self.ps_start.value()
         stop = self.ps_stop.value()
         step = self.ps_step.value()
         hwp = self.hwp.value()
         spec = self.spectrograph.value()
-        
-        hwp.write_angle(start)
+
+        n = self.n_measurements.value()
+        if n <= 0:
+            return
+        if self.ps_log_steps.value():
+            angles = self._log_power_angles(start, stop, n)
+        else:
+            angles = start + np.arange(n) * step
+        self.current_angles.setValue(angles)
+
+        hwp.write_angle(angles[0])
 
         no_pixels = spec.detector_pixels.value()
-        n = self.n_measurements.value()
         data = np.empty((n, no_pixels))
         self.intensity_counts_powerseries_complete.setValue(data)
         data_power = np.empty(n)
         data_angle = np.empty(n)
-        print("Number of Measurements:", self.n_measurements.value())
+        print("Number of Measurements:", n)
 
 
         cam = self.camera.value()
@@ -369,17 +441,18 @@ class PhotoluminescenceModule(Module):
         temperature = 0 # to implement
         integration_time = cam.exposure.value()
         center_wavelength = spec.center_wavelength.value() * 1e9
+        center_energy = HelperFunctions().wavelength_energy_converter(center_wavelength)
         entrance_slit_width = spec.entrance_slit_direct.value() * 1e3 # convert to mm
         exit_slit_width = 0
-        filepath = self.update_save_string()
+        filepath = self.update_save_string(integration_time, center_energy)
 
 
-        for i in range(self.n_measurements.value()):    
+        for i in range(n):
 
-            hwp.write_angle(start + i*step)
-            data_angle[i] = start + i*step
+            hwp.write_angle(angles[i])
+            data_angle[i] = angles[i]
             self._acquire(self.intensity_counts_powerseries, self.wavelength_nm, self.averaging.value(), False)
-            pm.reading.trigger_read()
+            pm.reading.trigger_read().wait(2.0)
             power = pm.reading.value()
             data_power[i] = power
             self.powers.setValue(data_power)
@@ -399,6 +472,8 @@ class PhotoluminescenceModule(Module):
 
     @QtCore.Slot()
     def _on_ps_input_update_nmeasurements_value(self):
+        if self.ps_log_steps.value():
+            return
         n = int((self.ps_stop.value()-self.ps_start.value())/self.ps_step.value()) + 1
         self.n_measurements.setValue(n)
 
@@ -425,10 +500,10 @@ class PhotoluminescenceModule(Module):
         self.energy_ev.setValue(energies)
 
 
-    def update_save_string(self):
+    def update_save_string(self, integration_time, center_energy):
         dir = self.save_directory.value()
         file = self.save_filename.value()
-        
+
         helper = HelperFunctions()
 
         if self._sweep_filenumber is not None:
@@ -437,7 +512,9 @@ class PhotoluminescenceModule(Module):
         else:
             filenumber = helper.get_next_file_number(dir)
 
-        new_save_string =  f"{dir}\\{filenumber}_{file}.origin"
+        new_save_string = (
+            f"{dir}\\{filenumber}_{file}_{integration_time:.3f}s_{center_energy:.3f}eV.origin"
+        )
         # self.save_string.setValue(new_save_string)
         return new_save_string
     

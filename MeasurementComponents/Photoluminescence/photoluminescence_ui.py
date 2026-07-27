@@ -15,7 +15,7 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QAbstractSpinBox, QApplication, QCheckBox, QComboBox,
+from PySide6.QtWidgets import (QAbstractSpinBox, QApplication, QCheckBox,
     QDoubleSpinBox, QGridLayout, QHBoxLayout, QLabel,
     QLineEdit, QPushButton, QSizePolicy, QVBoxLayout,
     QWidget)
@@ -123,23 +123,14 @@ class Ui_PhotoluminescenceWidget(object):
 
         self.gridLayout.addWidget(self.label_14, 2, 0, 1, 1)
 
-        self.label_8 = QLabel(self.widget_13)
-        self.label_8.setObjectName(u"label_8")
         sizePolicy4 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         sizePolicy4.setHorizontalStretch(0)
         sizePolicy4.setVerticalStretch(0)
-        sizePolicy4.setHeightForWidth(self.label_8.sizePolicy().hasHeightForWidth())
-        self.label_8.setSizePolicy(sizePolicy4)
-        self.label_8.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout.addWidget(self.label_8, 4, 0, 1, 1)
+        self.Settings_PushButton = QPushButton(self.widget_13)
+        self.Settings_PushButton.setObjectName(u"Settings_PushButton")
 
-        self.NumMeasurements_Label = QLabel(self.widget_13)
-        self.NumMeasurements_Label.setObjectName(u"NumMeasurements_Label")
-        sizePolicy3.setHeightForWidth(self.NumMeasurements_Label.sizePolicy().hasHeightForWidth())
-        self.NumMeasurements_Label.setSizePolicy(sizePolicy3)
-
-        self.gridLayout.addWidget(self.NumMeasurements_Label, 4, 1, 1, 1)
+        self.gridLayout.addWidget(self.Settings_PushButton, 3, 0, 1, 3)
 
         self.PsStop_DoubleSpinBox = QDoubleSpinBox(self.widget_13)
         self.PsStop_DoubleSpinBox.setObjectName(u"PsStop_DoubleSpinBox")
@@ -284,69 +275,6 @@ class Ui_PhotoluminescenceWidget(object):
 
         self.horizontalLayout_2.addWidget(self.widget_2)
 
-        self.widget_3 = QWidget(self.SaveData)
-        self.widget_3.setObjectName(u"widget_3")
-        sizePolicy6 = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
-        sizePolicy6.setHorizontalStretch(0)
-        sizePolicy6.setVerticalStretch(0)
-        sizePolicy6.setHeightForWidth(self.widget_3.sizePolicy().hasHeightForWidth())
-        self.widget_3.setSizePolicy(sizePolicy6)
-        self.widget_3.setMinimumSize(QSize(200, 0))
-        self.gridLayout_3 = QGridLayout(self.widget_3)
-        self.gridLayout_3.setObjectName(u"gridLayout_3")
-        self.xlabel_ComboBox = QComboBox(self.widget_3)
-        self.xlabel_ComboBox.addItem("")
-        self.xlabel_ComboBox.addItem("")
-        self.xlabel_ComboBox.setObjectName(u"xlabel_ComboBox")
-        self.xlabel_ComboBox.setMinimumSize(QSize(150, 0))
-        self.xlabel_ComboBox.setMaximumSize(QSize(100, 16777215))
-
-        self.gridLayout_3.addWidget(self.xlabel_ComboBox, 3, 1, 1, 1)
-
-        self.label_23 = QLabel(self.widget_3)
-        self.label_23.setObjectName(u"label_23")
-        self.label_23.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout_3.addWidget(self.label_23, 2, 0, 1, 1)
-
-        self.label_24 = QLabel(self.widget_3)
-        self.label_24.setObjectName(u"label_24")
-        self.label_24.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout_3.addWidget(self.label_24, 3, 0, 1, 1)
-
-        self.yscale_ComboBox = QComboBox(self.widget_3)
-        self.yscale_ComboBox.addItem("")
-        self.yscale_ComboBox.addItem("")
-        self.yscale_ComboBox.setObjectName(u"yscale_ComboBox")
-        self.yscale_ComboBox.setMinimumSize(QSize(150, 0))
-        self.yscale_ComboBox.setMaximumSize(QSize(100, 16777215))
-        self.yscale_ComboBox.setCursor(QCursor(Qt.CursorShape.ArrowCursor))
-        self.yscale_ComboBox.setFrame(True)
-
-        self.gridLayout_3.addWidget(self.yscale_ComboBox, 2, 1, 1, 1)
-
-        self.label_25 = QLabel(self.widget_3)
-        self.label_25.setObjectName(u"label_25")
-        self.label_25.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout_3.addWidget(self.label_25, 4, 0, 1, 1)
-
-        self.ColorScheme_ComboBox = QComboBox(self.widget_3)
-        self.ColorScheme_ComboBox.addItem("")
-        self.ColorScheme_ComboBox.addItem("")
-        self.ColorScheme_ComboBox.addItem("")
-        self.ColorScheme_ComboBox.addItem("")
-        self.ColorScheme_ComboBox.addItem("")
-        self.ColorScheme_ComboBox.setObjectName(u"ColorScheme_ComboBox")
-        self.ColorScheme_ComboBox.setMinimumSize(QSize(150, 0))
-        self.ColorScheme_ComboBox.setMaximumSize(QSize(100, 16777215))
-
-        self.gridLayout_3.addWidget(self.ColorScheme_ComboBox, 4, 1, 1, 1)
-
-
-        self.horizontalLayout_2.addWidget(self.widget_3)
-
 
         self.verticalLayout_11.addWidget(self.SaveData)
 
@@ -372,8 +300,7 @@ class Ui_PhotoluminescenceWidget(object):
         self.label_13.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Start (\u00b0)", None))
         self.label_7.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Stop (\u00b0)", None))
         self.label_14.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Step (\u00b0)", None))
-        self.label_8.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Measurements", None))
-        self.NumMeasurements_Label.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"45", None))
+        self.Settings_PushButton.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Settings...", None))
         self.PsStop_DoubleSpinBox.setSuffix(QCoreApplication.translate("PhotoluminescenceWidget", u"\u00b0", None))
         self.PsStep_DoubleSpinBox.setSuffix(QCoreApplication.translate("PhotoluminescenceWidget", u"\u00b0", None))
         self.StartPS_PushButton.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Start", None))
@@ -389,20 +316,6 @@ class Ui_PhotoluminescenceWidget(object):
         self.ShowReference_CheckBox.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Show Reference Spectra", None))
         self.SelectReference_PushButton.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Select Reference Files...", None))
         self.ReferenceFiles_Label.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"No reference files selected", None))
-        self.xlabel_ComboBox.setItemText(0, QCoreApplication.translate("PhotoluminescenceWidget", u"Energy", None))
-        self.xlabel_ComboBox.setItemText(1, QCoreApplication.translate("PhotoluminescenceWidget", u"Wavelength", None))
-
-        self.label_23.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Scale", None))
-        self.label_24.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"X-axis", None))
-        self.yscale_ComboBox.setItemText(0, QCoreApplication.translate("PhotoluminescenceWidget", u"Linear", None))
-        self.yscale_ComboBox.setItemText(1, QCoreApplication.translate("PhotoluminescenceWidget", u"Logarithmic", None))
-
-        self.label_25.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Colors", None))
-        self.ColorScheme_ComboBox.setItemText(0, QCoreApplication.translate("PhotoluminescenceWidget", u"Viridis", None))
-        self.ColorScheme_ComboBox.setItemText(1, QCoreApplication.translate("PhotoluminescenceWidget", u"Spectral", None))
-        self.ColorScheme_ComboBox.setItemText(2, QCoreApplication.translate("PhotoluminescenceWidget", u"CoolWarm", None))
-        self.ColorScheme_ComboBox.setItemText(3, QCoreApplication.translate("PhotoluminescenceWidget", u"Warm", None))
-        self.ColorScheme_ComboBox.setItemText(4, QCoreApplication.translate("PhotoluminescenceWidget", u"Turbo", None))
 
     # retranslateUi
 

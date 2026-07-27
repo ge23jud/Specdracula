@@ -10,6 +10,7 @@ class DashboardModule(Module):
     camera = SFT.ObjectParameter('Camera', SFT.TurboComponent)
     spectrograph = SFT.ObjectParameter('Spectrograph', SFT.TurboComponent)
     piezo = SFT.ObjectParameter('Piezo', SFT.TurboComponent)
+    shutter = SFT.ObjectParameter('Shutter', SFT.TurboComponent)
 
     center_wavelength = SFT.PhysicalParameter("Center Wavelength", dtype=float, value=1e-6, unit="m")
 
@@ -24,6 +25,7 @@ class DashboardModule(Module):
     output_mirror = SFT.PhysicalParameter("Output Mirror", dtype=str, value="Side", range=SFT.ChoiceRangeType(**{"Direct": 0, "Side": 1}))
     direct_input_slit_width = SFT.PhysicalParameter("Direct Input Slit Width", dtype=float, value=100e-6, unit="m", range=SFT.MinMaxRangeType(min=10e-6, max=2000e-6))
     side_input_slit_width = SFT.PhysicalParameter("Side Input Slit Width", dtype=float, value=100e-6, unit="m", range=SFT.MinMaxRangeType(min=10e-6, max=2000e-6))
+    excitation_shutter = SFT.PhysicalParameter("Excitation Shutter", dtype=bool, value=False)
 
     step_up_ActionParam = SFT.ActionParameter('Step Up')
     step_down_ActionParam = SFT.ActionParameter('Step Down')
@@ -102,6 +104,11 @@ class DashboardModule(Module):
         self.piezo_y.connect_to_hardware(
             read_func=self.get_piezo_y,
             write_func=self.set_piezo_y
+        )
+
+        self.excitation_shutter.connect_to_hardware(
+            read_func=self.get_excitation_shutter,
+            write_func=self.set_excitation_shutter
         )
 
         # Integration time and HWP position can change from elsewhere (e.g. a PL
@@ -194,6 +201,14 @@ class DashboardModule(Module):
 
     def get_piezo_y(self):
         return self.piezo.value().get_single_position_SI('y') * 1e6
+
+    def set_excitation_shutter(self, is_open):
+        shutter = self.shutter.value()
+        shutter.device.set_shutter_state(shutter.shutter_id.value(), bool(is_open))
+
+    def get_excitation_shutter(self):
+        shutter = self.shutter.value()
+        return shutter.device.get_shutter_state(shutter.shutter_id.value())
 
     def _step(self, axis, direction):
         piezo = self.piezo.value()

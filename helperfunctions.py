@@ -319,3 +319,27 @@ class HelperFunctions():
             fh.write("\n".join(lines) + "\n")
 
 
+    def read_powercal_origin(self, filepath: str):
+        """Parse a power-calibration .origin file back into (angles_deg, powers_W).
+
+        Each data row written by `write_powercal_origin` has the shape
+        "<power W>\\t<angle deg>\\t<power W>"; header/unit rows are skipped
+        since their fields don't all parse as floats.
+        """
+        angles = []
+        powers = []
+        with open(filepath, encoding="latin-1") as fh:
+            for line in fh:
+                parts = line.rstrip("\r\n").split("\t")
+                if len(parts) < 2:
+                    continue
+                try:
+                    power = float(parts[0])
+                    angle = float(parts[1])
+                except ValueError:
+                    continue
+                angles.append(angle)
+                powers.append(power)
+        return np.array(angles), np.array(powers)
+
+

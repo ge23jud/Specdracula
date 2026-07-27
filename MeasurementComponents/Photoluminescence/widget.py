@@ -41,18 +41,81 @@ def _scheme_color(t, scheme_name):
     b = int(b0 + f * (b1 - b0))
     return f'#{r:02x}{g:02x}{b:02x}'
 
+class _SettingsDialog(QtWidgets.QDialog):
+    """Secondary settings panel (log steps, measurement count, plot display),
+    kept out of the main view so the standard interface stays uncluttered."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Settings")
+        outer = QtWidgets.QVBoxLayout(self)
+        columns = QtWidgets.QHBoxLayout()
+        outer.addLayout(columns)
+
+        left = QtWidgets.QVBoxLayout()
+        self.LogSteps_CheckBox = QtWidgets.QCheckBox("Log Steps")
+        left.addWidget(self.LogSteps_CheckBox)
+
+        cal_row = QtWidgets.QHBoxLayout()
+        cal_row.addWidget(QtWidgets.QLabel("Power Calibration"))
+        self.SelectPowerCal_PushButton = QtWidgets.QPushButton("Select Power Cal File...")
+        cal_row.addWidget(self.SelectPowerCal_PushButton)
+        left.addLayout(cal_row)
+
+        self.PowerCalFile_Label = QtWidgets.QLabel("No power calibration file selected")
+        self.PowerCalFile_Label.setWordWrap(True)
+        left.addWidget(self.PowerCalFile_Label)
+        left.addStretch()
+
+        right = QtWidgets.QFormLayout()
+        self.NumMeasurements_SpinBox = QtWidgets.QSpinBox()
+        self.NumMeasurements_SpinBox.setMinimum(1)
+        self.NumMeasurements_SpinBox.setMaximum(100000)
+        right.addRow("Measurements", self.NumMeasurements_SpinBox)
+
+        self.yscale_ComboBox = QtWidgets.QComboBox()
+        self.yscale_ComboBox.addItems(["Linear", "Logarithmic"])
+        right.addRow("Scale", self.yscale_ComboBox)
+
+        self.xlabel_ComboBox = QtWidgets.QComboBox()
+        self.xlabel_ComboBox.addItems(["Energy", "Wavelength"])
+        right.addRow("X-axis", self.xlabel_ComboBox)
+
+        self.ColorScheme_ComboBox = QtWidgets.QComboBox()
+        self.ColorScheme_ComboBox.addItems(["Viridis", "Spectral", "CoolWarm", "Warm", "Turbo"])
+        right.addRow("Colors", self.ColorScheme_ComboBox)
+
+        columns.addLayout(left)
+        columns.addLayout(right)
+
+        close_button = QtWidgets.QPushButton("Close")
+        close_button.clicked.connect(self.accept)
+        outer.addWidget(close_button)
+
+
 class PhotoluminescenceView(TurboComponentView, Ui_PhotoluminescenceWidget):
     def __init__(self, component, parent=None):
         TurboComponentView.__init__(self, component, parent=parent)
-        
+
         self.setupUi(self)
         self.setup_plot()
+
+        self._settings_dialog = _SettingsDialog(self)
+        self.LogSteps_CheckBox = self._settings_dialog.LogSteps_CheckBox
+        self.SelectPowerCal_PushButton = self._settings_dialog.SelectPowerCal_PushButton
+        self.PowerCalFile_Label = self._settings_dialog.PowerCalFile_Label
+        self.NumMeasurements_SpinBox = self._settings_dialog.NumMeasurements_SpinBox
+        self.yscale_ComboBox = self._settings_dialog.yscale_ComboBox
+        self.xlabel_ComboBox = self._settings_dialog.xlabel_ComboBox
+        self.ColorScheme_ComboBox = self._settings_dialog.ColorScheme_ComboBox
 
         SFT.connect_widget_to_param(self.yscale_ComboBox, component.y_scale)
         SFT.connect_widget_to_param(self.xlabel_ComboBox, component.x_label)
         SFT.connect_widget_to_param(self.PsStart_DoubleSpinBox, component.ps_start)
         SFT.connect_widget_to_param(self.PsStop_DoubleSpinBox, component.ps_stop)
         SFT.connect_widget_to_param(self.PsStep_DoubleSpinBox, component.ps_step)
+        SFT.connect_widget_to_param(self.LogSteps_CheckBox, component.ps_log_steps)
+        SFT.connect_widget_to_param(self.NumMeasurements_SpinBox, component.n_measurements)
         SFT.connect_widget_to_param(self.Directory_LineEdit, component.save_directory)
         SFT.connect_widget_to_param(self.Filename_LineEdit, component.save_filename)
 
@@ -70,9 +133,10 @@ class PhotoluminescenceView(TurboComponentView, Ui_PhotoluminescenceWidget):
 
         self.SelectReference_PushButton.clicked.connect(self._on_select_reference_files)
         self.ShowReference_CheckBox.toggled.connect(self._on_reference_toggled)
+        self.SelectPowerCal_PushButton.clicked.connect(self._on_select_powercal_file)
+        self.Settings_PushButton.clicked.connect(self._on_open_settings)
 
         component.x_label.sigValueChanged.connect(self._on_xlabel_changed)
-        component.n_measurements.sigValueChanged.connect(self._on_ps_input_update_nmeasurements_label)
         component.intensity_counts.sigValueChanged.connect(self._update_plot_single)
         component.intensity_counts_powerseries.sigValueChanged.connect(self._update_plot_powerseries)
         component.stitch_edge_nm.sigValueChanged.connect(self._on_stitch_edge)
@@ -154,12 +218,6 @@ class PhotoluminescenceView(TurboComponentView, Ui_PhotoluminescenceWidget):
 
 
     @QtCore.Slot()
-    def _on_ps_input_update_nmeasurements_label(self):
-        self.NumMeasurements_Label.setText(str(self.component.n_measurements.value()))
-
-
-    
-    @QtCore.Slot()
     def _update_plot_single(self):
         xaxis = self.component.x_label.value()
         if xaxis == "Wavelength":
@@ -181,7 +239,11 @@ class PhotoluminescenceView(TurboComponentView, Ui_PhotoluminescenceWidget):
         i = num_items % max(n, 1)
         t = i / max(n - 1, 1)
         color = _scheme_color(t, self.component.colorscheme.value())
-        angle = self.component.ps_start.value() + i * self.component.ps_step.value()
+        current_angles = self.component.current_angles.value()
+        if current_angles is not None and i < len(current_angles):
+            angle = current_angles[i]
+        else:
+            angle = self.component.ps_start.value() + i * self.component.ps_step.value()
 
         xaxis = self.component.x_label.value()
         if xaxis == "Wavelength":
@@ -225,6 +287,25 @@ class PhotoluminescenceView(TurboComponentView, Ui_PhotoluminescenceWidget):
         self.ReferenceFiles_Label.setText(names)
         if self.ShowReference_CheckBox.isChecked():
             self._replot_references()
+
+
+    @QtCore.Slot()
+    def _on_select_powercal_file(self):
+        start_dir = self.component.save_directory.value() or ""
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Select Power Calibration File", start_dir, "Origin files (*.origin);;All files (*)"
+        )
+        if not path:
+            return
+        self.component.powercal_filepath.setValue(path)
+        self.PowerCalFile_Label.setText(os.path.basename(path))
+
+
+    @QtCore.Slot()
+    def _on_open_settings(self):
+        self._settings_dialog.show()
+        self._settings_dialog.raise_()
+        self._settings_dialog.activateWindow()
 
 
     @QtCore.Slot(bool)

@@ -67,12 +67,12 @@ class SpecDracula(SFT.TurboControl):
         power_meter.connect()
 
         # # Shutter setup
-        # shutter = ArduinoShutterHW(name='Shutter 1')
-        # _temp = shutter.find_param_by_name('Port')
-        # set_initial(_temp, 'ASRL11::INSTR')
-        # _temp = shutter.find_param_by_name('Shutter ID')
-        # set_initial(_temp, 10)
-        # shutter.connect()
+        shutter = ArduinoShutterHW(name='Shutter 1')
+        _temp = shutter.find_param_by_name('Port')
+        set_initial(_temp, 'ASRL57::INSTR')
+        _temp = shutter.find_param_by_name('Shutter ID')
+        set_initial(_temp, 11)
+        shutter.connect()
 
         # HWP setup
         hwp_motor = ThorlabsKDC101_PRMTZ8(name='HWP Rotation')
@@ -107,6 +107,7 @@ class SpecDracula(SFT.TurboControl):
         dashboard.spectrograph.setValue(spec)
         dashboard.halfwaveplate.setValue(hwp_motor)
         dashboard.piezo.setValue(piezo_stage)
+        dashboard.shutter.setValue(shutter)
         dashboard.connect()
 
         spotsize.powermeter.setValue(power_meter)

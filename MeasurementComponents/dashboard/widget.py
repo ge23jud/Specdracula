@@ -49,6 +49,7 @@ class DashboardView(TurboComponentView, Ui_DashboardWidget):
         SFT.connect_widget_to_param(self.PiezoDown_Button, component.step_down_ActionParam)
         SFT.connect_widget_to_param(self.PiezoLeft_Button, component.step_left_ActionParam)
         SFT.connect_widget_to_param(self.PiezoRight_Button, component.step_right_ActionParam)
+        SFT.connect_widget_to_param(self.Shutter_CheckBox, component.excitation_shutter)
         
     
     def disable_scroll_to_change(self):
