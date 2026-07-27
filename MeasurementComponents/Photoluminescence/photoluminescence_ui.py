@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'Photoluminescence.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.0
+## Created by: Qt User Interface Compiler version 6.11.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -39,6 +39,13 @@ class Ui_PhotoluminescenceWidget(object):
         self.widget_4.setObjectName(u"widget_4")
         self.verticalLayout_11 = QVBoxLayout(self.widget_4)
         self.verticalLayout_11.setObjectName(u"verticalLayout_11")
+        self.Status_Label = QLabel(self.widget_4)
+        self.Status_Label.setObjectName(u"Status_Label")
+        self.Status_Label.setMaximumSize(QSize(16777215, 18))
+        self.Status_Label.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+
+        self.verticalLayout_11.addWidget(self.Status_Label)
+
         self.plot_widget = PlotWidget(self.widget_4)
         self.plot_widget.setObjectName(u"plot_widget")
         self.plot_widget.setEnabled(True)
@@ -48,12 +55,6 @@ class Ui_PhotoluminescenceWidget(object):
         sizePolicy.setHeightForWidth(self.plot_widget.sizePolicy().hasHeightForWidth())
         self.plot_widget.setSizePolicy(sizePolicy)
 
-        self.Status_Label = QLabel(self.widget_4)
-        self.Status_Label.setObjectName(u"Status_Label")
-        self.Status_Label.setMaximumHeight(18)
-        self.Status_Label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-
-        self.verticalLayout_11.addWidget(self.Status_Label)
         self.verticalLayout_11.addWidget(self.plot_widget)
 
         self.SaveData = QWidget(self.widget_4)
@@ -264,6 +265,22 @@ class Ui_PhotoluminescenceWidget(object):
 
         self.gridLayout_2.addWidget(self.PxlCorrection_checkBox, 2, 1, 1, 1)
 
+        self.ShowReference_CheckBox = QCheckBox(self.widget_2)
+        self.ShowReference_CheckBox.setObjectName(u"ShowReference_CheckBox")
+
+        self.gridLayout_2.addWidget(self.ShowReference_CheckBox, 3, 0, 1, 1)
+
+        self.SelectReference_PushButton = QPushButton(self.widget_2)
+        self.SelectReference_PushButton.setObjectName(u"SelectReference_PushButton")
+
+        self.gridLayout_2.addWidget(self.SelectReference_PushButton, 3, 1, 1, 1)
+
+        self.ReferenceFiles_Label = QLabel(self.widget_2)
+        self.ReferenceFiles_Label.setObjectName(u"ReferenceFiles_Label")
+        self.ReferenceFiles_Label.setWordWrap(True)
+
+        self.gridLayout_2.addWidget(self.ReferenceFiles_Label, 4, 0, 1, 2)
+
 
         self.horizontalLayout_2.addWidget(self.widget_2)
 
@@ -347,6 +364,7 @@ class Ui_PhotoluminescenceWidget(object):
 
     def retranslateUi(self, PhotoluminescenceWidget):
         PhotoluminescenceWidget.setWindowTitle(QCoreApplication.translate("PhotoluminescenceWidget", u"Form", None))
+        self.Status_Label.setText("")
         self.StopLivePL_PushButton.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Stop Live PL", None))
         self.Snapshot_PushButton.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Snapshot", None))
         self.StartLivePL_PushButton.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Start Live PL", None))
@@ -368,6 +386,9 @@ class Ui_PhotoluminescenceWidget(object):
         self.label_2.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Filename", None))
         self.label.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Directory", None))
         self.PxlCorrection_checkBox.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Apply Pixel Correction (preliminary!)", None))
+        self.ShowReference_CheckBox.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Show Reference Spectra", None))
+        self.SelectReference_PushButton.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Select Reference Files...", None))
+        self.ReferenceFiles_Label.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"No reference files selected", None))
         self.xlabel_ComboBox.setItemText(0, QCoreApplication.translate("PhotoluminescenceWidget", u"Energy", None))
         self.xlabel_ComboBox.setItemText(1, QCoreApplication.translate("PhotoluminescenceWidget", u"Wavelength", None))
 
@@ -375,7 +396,7 @@ class Ui_PhotoluminescenceWidget(object):
         self.label_24.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"X-axis", None))
         self.yscale_ComboBox.setItemText(0, QCoreApplication.translate("PhotoluminescenceWidget", u"Linear", None))
         self.yscale_ComboBox.setItemText(1, QCoreApplication.translate("PhotoluminescenceWidget", u"Logarithmic", None))
-        self.Status_Label.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"", None))
+
         self.label_25.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Colors", None))
         self.ColorScheme_ComboBox.setItemText(0, QCoreApplication.translate("PhotoluminescenceWidget", u"Viridis", None))
         self.ColorScheme_ComboBox.setItemText(1, QCoreApplication.translate("PhotoluminescenceWidget", u"Spectral", None))

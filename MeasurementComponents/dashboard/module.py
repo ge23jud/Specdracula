@@ -104,6 +104,26 @@ class DashboardModule(Module):
             write_func=self.set_piezo_y
         )
 
+        # Integration time and HWP position can change from elsewhere (e.g. a PL
+        # powerseries sweep moves the HWP directly). Rather than polling the
+        # hardware on a timer -- which raced with Live PL acquisition and HWP
+        # moves and made both unresponsive -- mirror the driver's own parameters,
+        # which the driver already keeps current after every move/change.
+        hwp = self.halfwaveplate.value()
+        hwp.angle.sigValueChanged.connect(self._on_hwp_angle_changed)
+        self._on_hwp_angle_changed()  # seed with the already-current value
+
+        self.cam.exposure.sigValueChanged.connect(self._on_exposure_changed)
+        self._on_exposure_changed()  # seed with the already-current value
+
+    @QtCore.Slot()
+    def _on_hwp_angle_changed(self):
+        self.hwp_position.setValue(self.halfwaveplate.value().angle.value())
+
+    @QtCore.Slot()
+    def _on_exposure_changed(self):
+        self.integration_time.setValue(self.cam.exposure.value())
+
     def set_output_mirror(self, mirror):
         self.spec.host.SetFlipperMirror(int(self.dev_id), 2, int(self.output_mirror.range[mirror]))
 

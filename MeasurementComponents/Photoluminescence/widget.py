@@ -2,10 +2,13 @@ from PySide6 import QtCore
 import ScopeFoundry as SFT
 import pyqtgraph as pg
 import numpy as np
+import os
 from ScopeFoundry import TurboComponentView, connect_widget_to_param
 from .photoluminescence_ui import Ui_PhotoluminescenceWidget
+from helperfunctions import HelperFunctions
 
 from PySide6 import QtCore, QtWidgets
+from PySide6.QtWidgets import QFileDialog
 
 _HC_EV_NM = 1239.84193  # h·c in eV·nm, used for stitch-line repositioning
 
@@ -65,6 +68,8 @@ class PhotoluminescenceView(TurboComponentView, Ui_PhotoluminescenceWidget):
         SFT.connect_widget_to_param(self.MaxEnergy_DoubleSpinBox, component.bs_max_energy)
         SFT.connect_widget_to_param(self.Overlap_DoubleSpinBox, component.bs_overlap)
 
+        self.SelectReference_PushButton.clicked.connect(self._on_select_reference_files)
+        self.ShowReference_CheckBox.toggled.connect(self._on_reference_toggled)
 
         component.x_label.sigValueChanged.connect(self._on_xlabel_changed)
         component.n_measurements.sigValueChanged.connect(self._on_ps_input_update_nmeasurements_label)
@@ -78,7 +83,11 @@ class PhotoluminescenceView(TurboComponentView, Ui_PhotoluminescenceWidget):
 
         self._stitch_edges_nm = []   # [(wl_lo, wl_hi), …] one per completed stitch
         self._stitch_lines  = []     # [(line_lo, line_hi), …] InfiniteLine pairs
-        
+
+        self._reference_files = []    # paths of previously saved measurements to overlay
+        self._reference_curves = []   # PlotDataItems currently shown for those files
+        self._live_curve_count = 1    # tracks live (non-reference) curves; 1 for the placeholder from setup_plot
+
 
     def setup_plot(self):
         self.plot_widget.clear()
@@ -101,6 +110,8 @@ class PhotoluminescenceView(TurboComponentView, Ui_PhotoluminescenceWidget):
         else:
             self.plot_widget.setLabel("bottom", "Wavelength", units="nm")
         self._reposition_stitch_lines()
+        if self.ShowReference_CheckBox.isChecked():
+            self._replot_references()
 
     @QtCore.Slot()
     def _on_measurement_running_changed(self):
@@ -156,8 +167,9 @@ class PhotoluminescenceView(TurboComponentView, Ui_PhotoluminescenceWidget):
         elif xaxis == "Energy":
             X = self.component.energy_ev.value()
         Y = self.component.intensity_counts.value().flatten()
-        if len(self.plot_widget.listDataItems()) == 0:
+        if self._live_curve_count == 0:
             self.spectrum_plotDataItem = self.plot_widget.plot(X, Y)
+            self._live_curve_count = 1
         else:
             self.spectrum_plotDataItem.setData(x=X, y=Y)
 
@@ -165,7 +177,7 @@ class PhotoluminescenceView(TurboComponentView, Ui_PhotoluminescenceWidget):
     @QtCore.Slot()
     def _update_plot_powerseries(self):
         n = self.component.n_measurements.value()
-        num_items = len(self.plot_widget.listDataItems())
+        num_items = self._live_curve_count
         i = num_items % max(n, 1)
         t = i / max(n - 1, 1)
         color = _scheme_color(t, self.component.colorscheme.value())
@@ -183,14 +195,100 @@ class PhotoluminescenceView(TurboComponentView, Ui_PhotoluminescenceWidget):
 
         if num_items < n:
             self.legend.addItem(self.spectrum_plotDataItem, name=f"{angle:.1f}°")
+        self._live_curve_count += 1
 
 
     @QtCore.Slot()
     def _clear_plot(self):
-        self.plot_widget.clear()   # also removes InfiniteLines added via addItem
+        self.plot_widget.clear()   # also removes InfiniteLines and reference curves
         self.legend.clear()
         self._stitch_edges_nm.clear()
         self._stitch_lines.clear()
-        
+        self._reference_curves.clear()
+        self._live_curve_count = 0
+        if self.ShowReference_CheckBox.isChecked():
+            self._replot_references()
+
+
+    @QtCore.Slot()
+    def _on_select_reference_files(self):
+        start_dir = self.component.save_directory.value() or ""
+        paths, _ = QFileDialog.getOpenFileNames(
+            self, "Select Reference Measurements", start_dir, "Origin files (*.origin);;All files (*)"
+        )
+        if not paths:
+            return
+        self._reference_files = paths
+        names = ", ".join(os.path.basename(p) for p in paths)
+        if len(names) > 60:
+            names = f"{len(paths)} files selected"
+        self.ReferenceFiles_Label.setText(names)
+        if self.ShowReference_CheckBox.isChecked():
+            self._replot_references()
+
+
+    @QtCore.Slot(bool)
+    def _on_reference_toggled(self, checked):
+        if checked:
+            self._replot_references()
+        else:
+            self._remove_reference_curves()
+
+
+    def _replot_references(self):
+        self._remove_reference_curves()
+        if not self._reference_files:
+            return
+        xaxis = self.component.x_label.value()
+        pen = pg.mkPen(color=(160, 160, 160), width=1, style=QtCore.Qt.PenStyle.DotLine)
+        for path in self._reference_files:
+            wavelength, intensity = self._load_reference_spectrum(path)
+            if wavelength is None:
+                continue
+            if xaxis == "Energy":
+                X = HelperFunctions().wavelength_energy_converter(wavelength)
+            else:
+                X = wavelength
+            curve = self.plot_widget.plot(X, intensity, pen=pen, name=os.path.basename(path))
+            curve.setZValue(-1)
+            self._reference_curves.append(curve)
+
+
+    def _remove_reference_curves(self):
+        for curve in self._reference_curves:
+            self.plot_widget.removeItem(curve)
+            self.legend.removeItem(curve)
+        self._reference_curves.clear()
+
+
+    @staticmethod
+    def _load_reference_spectrum(path):
+        """Parse a .origin file, returning (wavelength_nm, intensity) averaged over its power columns."""
+        wavelengths = []
+        rows = []
+        try:
+            with open(path, encoding="latin-1") as fh:
+                for line in fh:
+                    parts = line.rstrip("\r\n").split("\t")
+                    try:
+                        wl = float(parts[0])
+                    except (ValueError, IndexError):
+                        continue
+                    counts = []
+                    for p in parts[1:]:
+                        try:
+                            counts.append(float(p))
+                        except ValueError:
+                            break
+                    if counts:
+                        wavelengths.append(wl)
+                        rows.append(counts)
+        except OSError:
+            return None, None
+        if not wavelengths:
+            return None, None
+        return np.array(wavelengths), np.mean(np.array(rows), axis=1)
+
+
 
     

@@ -3,13 +3,35 @@ from ScopeFoundry import TurboComponentView, connect_widget_to_param
 from .dashboard_ui import Ui_DashboardWidget
 import ScopeFoundry as SFT
 
+
+class _WheelEventBlocker(QtCore.QObject):
+    """Prevents mouse-wheel scrolling from changing the watched widget's value.
+
+    Users have accidentally changed settings (e.g. grating, input/output mirror)
+    by scrolling the dashboard while the cursor happened to be over a combo box
+    or spin box. Forwarding the wheel event to the scroll area's viewport instead
+    keeps normal page-scrolling working while making these controls click-only.
+    """
+
+    def __init__(self, scroll_area, parent=None):
+        super().__init__(parent)
+        self._scroll_area = scroll_area
+
+    def eventFilter(self, watched, event):
+        if event.type() == QtCore.QEvent.Type.Wheel:
+            QtWidgets.QApplication.sendEvent(self._scroll_area.viewport(), event)
+            return True
+        return False
+
+
 class DashboardView(TurboComponentView, Ui_DashboardWidget):
     def __init__(self, component, parent=None):
         TurboComponentView.__init__(self, component, parent=parent)
         self.setupUi(self)
-        
+
         # Make group boxes collapsible
         self.setup_collapsible_groups()
+        self.disable_scroll_to_change()
 
         SFT.connect_widget_to_param(self.CenterWavelength_DoubleSpinBox, component.center_wavelength)
         SFT.connect_widget_to_param(self.CenterEnergy_DoubleSpinBox, component.center_energy)
@@ -29,6 +51,30 @@ class DashboardView(TurboComponentView, Ui_DashboardWidget):
         SFT.connect_widget_to_param(self.PiezoRight_Button, component.step_right_ActionParam)
         
     
+    def disable_scroll_to_change(self):
+        """Make all dashboard value controls ignore mouse-wheel scrolling.
+
+        Scrolling over a combo box or spin box would otherwise change its value
+        instead of scrolling the dashboard, causing unnoticed hardware changes.
+        """
+        self._wheel_blocker = _WheelEventBlocker(self.scrollArea, self)
+        controls = [
+            self.CenterWavelength_DoubleSpinBox,
+            self.CenterEnergy_DoubleSpinBox,
+            self.IntegrationTime_DoubleSpinBox,
+            self.PiezoX_DoubleSpinBox,
+            self.PiezoY_DoubleSpinBox,
+            self.PiezoStep_DoubleSpinBox,
+            self.HWPPos_DoubleSpinBox,
+            self.Grating_ComboBox,
+            self.InputMirror_ComboBox,
+            self.OutputMirror_ComboBox,
+            self.DirectInputSlit_DoubleSpinBox,
+            self.SideInputSlit_DoubleSpinBox,
+        ]
+        for control in controls:
+            control.installEventFilter(self._wheel_blocker)
+
     def setup_collapsible_groups(self):
         """Make group boxes collapsible by clicking their title."""
         group_boxes = [

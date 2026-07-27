@@ -111,6 +111,8 @@ class PhotoluminescenceModule(Module):
         self.interrupt_ActionParam.sigActivated.connect(self.interrupt)
         self.powerseries_ActionParam.sigActivated.connect(lambda: self.task_powerseries.run_on_pool())
         self._interrupted = False
+        self._sweep_filenumber = None
+        self._sweep_index = None
         #self.file_exporters["HDF files (*.h5)"] = AndorCCDReadoutMeasure.to_hdf
 
         self.wavelength_nm.sigValueChanged.connect(self._update_energy_array)
@@ -291,7 +293,12 @@ class PhotoluminescenceModule(Module):
         if E_max <= E_min:
             raise ValueError('BS Max Energy must be greater than BS Min Energy.')
 
-        # W_nm is constant for a given grating+detector; get it from the current calibration
+        # W_nm is assumed constant for a given grating+detector, but real dispersion is
+        # wavelength-dependent, so it must be sampled at a fixed reference position (E_max)
+        # rather than wherever the spectrograph happens to be left parked -- otherwise the
+        # whole sweep's center energies drift from run to run for identical inputs.
+        spec.center_wavelength.write_to_device(_HC_EV_NM / E_max * 1e-9)
+        spec.center_wavelength.trigger_read().wait(30.0)
         wl = self.get_wavelength_calibration()  # nm, ascending (wl[0]=short λ, wl[-1]=long λ)
         W_nm = wl[-1] - wl[0]
 
@@ -316,17 +323,25 @@ class PhotoluminescenceModule(Module):
         print(f'Bandwidth sweep: {len(centers)} positions, W_nm={W_nm:.1f} nm, overlap={overlap:.3f} eV')
         print(f'Center energies (eV): {[f"{c:.4f}" for c in centers]}')
 
-        for E_center in centers:
-            if self._interrupted:
-                break
-            λ_m = _HC_EV_NM / E_center * 1e-9
-            spec.center_wavelength.write_to_device(λ_m)
-            spec.center_wavelength.trigger_read().wait(30.0)
-            spec.wavelength_calib.trigger_read().wait(5.0)
-            self._single_powerseries()
-            wl = self.wavelength_nm.value()
-            if wl is not None and len(wl) >= 2:
-                self.stitch_edge_nm.setValue(np.array([wl[0], wl[-1]]))
+        # All positions of one sweep share a single leading file number; each position
+        # is distinguished by a "_NN" sub-index instead of bumping the leading number.
+        self._sweep_filenumber = HelperFunctions().get_next_file_number(self.save_directory.value())
+        self._sweep_index = 0
+        try:
+            for E_center in centers:
+                if self._interrupted:
+                    break
+                λ_m = _HC_EV_NM / E_center * 1e-9
+                spec.center_wavelength.write_to_device(λ_m)
+                spec.center_wavelength.trigger_read().wait(30.0)
+                spec.wavelength_calib.trigger_read().wait(5.0)
+                self._single_powerseries()
+                wl = self.wavelength_nm.value()
+                if wl is not None and len(wl) >= 2:
+                    self.stitch_edge_nm.setValue(np.array([wl[0], wl[-1]]))
+        finally:
+            self._sweep_filenumber = None
+            self._sweep_index = None
 
     def _single_powerseries(self):
         start = self.ps_start.value()
@@ -415,7 +430,12 @@ class PhotoluminescenceModule(Module):
         file = self.save_filename.value()
         
         helper = HelperFunctions()
-        filenumber = helper.get_next_file_number(dir)
+
+        if self._sweep_filenumber is not None:
+            filenumber = f"{self._sweep_filenumber}_{self._sweep_index:02d}"
+            self._sweep_index += 1
+        else:
+            filenumber = helper.get_next_file_number(dir)
 
         new_save_string =  f"{dir}\\{filenumber}_{file}.origin"
         # self.save_string.setValue(new_save_string)

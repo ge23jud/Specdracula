@@ -1,0 +1,14 @@
+- color scheme
+- updating x-axis when changing center energy
+- what angle is currently acquired during a power series
+- second live-spectrum window
+- fix center wavelength metadata
+- hotkeys
+- standardized window modes
+- README file
+- time estimate for measurement time
+- Constant energy overlap, overflow in energy range
+- One button to switch between wavelength and energy for everything
+- laser power to min after measurement
+- standardize units
+- make stop button actually stop powerseries also for bandwidth sweep
