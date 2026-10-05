@@ -18,6 +18,8 @@ from HardwareComponents.thorlabs_motors import ThorlabsKDC101_PRMTZ8
 from HardwareComponents.piezo_jena_NV403CLE import PiezoJenaNV40_HW
 from HardwareComponents.andor_camera import AndorCCDHW
 from HardwareComponents.andor_spec import AndorSpectrographHW
+from HardwareComponents.thorlabs_laser import ThorlabsKLSLaserHW
+from power_axis_adapters import HWPPowerAxisAdapter, LaserPowerAxisAdapter
 
 from MeasurementComponents.XYMeasurement import XYMeasurementModule
 from MeasurementComponents.Photoluminescence import PhotoluminescenceModule
@@ -48,6 +50,7 @@ class SpecDracula(SFT.TurboControl):
     available_modules = {}
     
     def setup(self):
+        
         self.log.info('setup')
         
         dashboard = DashboardModule(name='Dashboard')
@@ -80,6 +83,12 @@ class SpecDracula(SFT.TurboControl):
         set_initial(_temp, '27253212')  # KDC101 serial number
         hwp_motor.connect()
 
+        # Laser 2 setup (Thorlabs KLS635 K-Cube Laser Source)
+        laser2 = ThorlabsKLSLaserHW(name='Laser 2 (KLS635)')
+        _temp = laser2.find_param_by_name('Serial number')
+        set_initial(_temp, '56534954')  # KLS635 serial number
+        #laser2.connect()
+
         # Piezo setup
         piezo_stage = PiezoJenaNV40_HW(name='Piezo stage')
         _temp = piezo_stage.find_param_by_name('Port')
@@ -102,12 +111,14 @@ class SpecDracula(SFT.TurboControl):
         photoluminescence.spectrograph.setValue(spec)
         photoluminescence.hwp.setValue(hwp_motor)
         photoluminescence.powermeter.setValue(power_meter)
+        photoluminescence.shutter.setValue(shutter)
 
         dashboard.camera.setValue(ccd_camera)
         dashboard.spectrograph.setValue(spec)
         dashboard.halfwaveplate.setValue(hwp_motor)
         dashboard.piezo.setValue(piezo_stage)
         dashboard.shutter.setValue(shutter)
+        dashboard.laser2.setValue(laser2)
         dashboard.connect()
 
         spotsize.powermeter.setValue(power_meter)
@@ -126,6 +137,49 @@ class SpecDracula(SFT.TurboControl):
         spotsize.status.setValue(status)
 
         status.powermeter.setValue(power_meter)
+
+        # Power axis adapter (see power_axis_adapters.py) -- lets the powerseries
+        # sweep loops call one uniform method regardless of which laser/power
+        # control mechanism is active.
+        hwp_power_adapter = HWPPowerAxisAdapter(hwp_motor)
+        photoluminescence.active_power_adapter = hwp_power_adapter
+        powercalibration.active_power_adapter = hwp_power_adapter
+
+        # Active-laser selector (dashboard combo box) -- reassigns the power
+        # adapter (and its unit/range) on every consumer module.
+        laser_power_adapters = {
+            "Laser 1 (HWP)": hwp_power_adapter,
+            "Laser 2 (KLS)": LaserPowerAxisAdapter(laser2),
+        }
+        _current_laser_choice = ["Laser 1 (HWP)"]
+        power_axis_consumers = (photoluminescence, powercalibration)
+
+        def _apply_laser_choice(choice):
+            adapter = laser_power_adapters[choice]
+            for consumer in power_axis_consumers:
+                consumer.active_power_adapter = adapter
+                for pname in ("ps_start", "ps_stop", "ps_step"):
+                    p = getattr(consumer, pname)
+                    p.set_unit(adapter.unit)
+                    p.set_range(adapter.range)
+                    p.setValue(adapter.range.min)
+
+        def _on_active_laser_changed():
+            choice = dashboard.active_laser.value()
+            if choice == _current_laser_choice[0]:
+                return
+            running = any(c.measurement_running.value() for c in power_axis_consumers)
+            if running:
+                logging.getLogger(__name__).warning(
+                    'Refusing to switch active laser while a measurement is running.'
+                )
+                dashboard.active_laser.setValue(_current_laser_choice[0])
+                return
+            laser_power_adapters[_current_laser_choice[0]].to_min()
+            _apply_laser_choice(choice)
+            _current_laser_choice[0] = choice
+
+        dashboard.active_laser.sigValueChanged.connect(_on_active_laser_changed)
 
 
     def setup_ui(self, main_window):
@@ -230,6 +284,7 @@ if __name__ == "__main__":
 
     filepath = f"C:\Measurements\{dt.date.today().__str__().replace("-", "")}"
     if not os.path.isdir(filepath):
+
         os.makedirs(filepath)
 
     window = SFT.TurboMainWindow()
@@ -239,6 +294,8 @@ if __name__ == "__main__":
     app.setStyleSheet(app.styleSheet())
 
     app.setup_ui(window)
+
+
 
     window.show()
     sys.exit(app.exec())

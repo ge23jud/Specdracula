@@ -38,7 +38,7 @@ class AndorCCDHW(HardwareModule):
         name="Exposure time",
         dtype=float,
         unit="s",
-        value=0.1,
+        value=1.0,
         range=SFT.MinMaxRangeType(min=0, max=86400, decimals=5)
     )
     acc_cycle_time = PhysicalParameter(
@@ -298,7 +298,7 @@ class AndorCCDHW(HardwareModule):
         self.temperature_status.trigger_read().wait(timeout)
         self.detector_shape.trigger_read().wait(timeout)
         self.pixel_size.trigger_read().wait(timeout)
-        self.exposure.trigger_read().wait(timeout)  # one is enough as they share timings
+        self.exposure.write_to_device(1.0).wait(timeout)  # standard starting exposure
         self.cooler_active.write_to_device(True).wait(timeout)
         self.cooler_active.trigger_read().wait(timeout)
         # acquisition mode impacts the timings

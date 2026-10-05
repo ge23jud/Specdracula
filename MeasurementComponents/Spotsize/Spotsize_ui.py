@@ -111,7 +111,7 @@ class Ui_SpotsizeWidget(object):
         self.Start_PushButton.setSizePolicy(sizePolicy1)
         self.Start_PushButton.setMinimumSize(QSize(0, 20))
 
-        self.gridLayout.addWidget(self.Start_PushButton, 6, 0, 1, 3)
+        self.gridLayout.addWidget(self.Start_PushButton, 7, 0, 1, 3)
 
         self.Stop_DoubleSpinBox = QDoubleSpinBox(self.widget_13)
         self.Stop_DoubleSpinBox.setObjectName(u"Stop_DoubleSpinBox")
@@ -134,6 +134,38 @@ class Ui_SpotsizeWidget(object):
 
         self.gridLayout.addWidget(self.Step_DoubleSpinBox, 2, 1, 1, 2)
 
+        self.label_SettleTime = QLabel(self.widget_13)
+        self.label_SettleTime.setObjectName(u"label_SettleTime")
+        sizePolicy4.setHeightForWidth(self.label_SettleTime.sizePolicy().hasHeightForWidth())
+        self.label_SettleTime.setSizePolicy(sizePolicy4)
+
+        self.gridLayout.addWidget(self.label_SettleTime, 5, 0, 1, 1)
+
+        self.SettleTime_DoubleSpinBox = QDoubleSpinBox(self.widget_13)
+        self.SettleTime_DoubleSpinBox.setObjectName(u"SettleTime_DoubleSpinBox")
+        sizePolicy5.setHeightForWidth(self.SettleTime_DoubleSpinBox.sizePolicy().hasHeightForWidth())
+        self.SettleTime_DoubleSpinBox.setSizePolicy(sizePolicy5)
+        self.SettleTime_DoubleSpinBox.setMinimumSize(QSize(100, 10))
+        self.SettleTime_DoubleSpinBox.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
+
+        self.gridLayout.addWidget(self.SettleTime_DoubleSpinBox, 5, 1, 1, 2)
+
+        self.label_AveragingTime = QLabel(self.widget_13)
+        self.label_AveragingTime.setObjectName(u"label_AveragingTime")
+        sizePolicy4.setHeightForWidth(self.label_AveragingTime.sizePolicy().hasHeightForWidth())
+        self.label_AveragingTime.setSizePolicy(sizePolicy4)
+
+        self.gridLayout.addWidget(self.label_AveragingTime, 6, 0, 1, 1)
+
+        self.AveragingTime_DoubleSpinBox = QDoubleSpinBox(self.widget_13)
+        self.AveragingTime_DoubleSpinBox.setObjectName(u"AveragingTime_DoubleSpinBox")
+        sizePolicy5.setHeightForWidth(self.AveragingTime_DoubleSpinBox.sizePolicy().hasHeightForWidth())
+        self.AveragingTime_DoubleSpinBox.setSizePolicy(sizePolicy5)
+        self.AveragingTime_DoubleSpinBox.setMinimumSize(QSize(100, 10))
+        self.AveragingTime_DoubleSpinBox.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
+
+        self.gridLayout.addWidget(self.AveragingTime_DoubleSpinBox, 6, 1, 1, 2)
+
         self.label_7 = QLabel(self.widget_13)
         self.label_7.setObjectName(u"label_7")
         sizePolicy4.setHeightForWidth(self.label_7.sizePolicy().hasHeightForWidth())
@@ -147,7 +179,7 @@ class Ui_SpotsizeWidget(object):
         self.Stop_PushButton.setSizePolicy(sizePolicy1)
         self.Stop_PushButton.setMinimumSize(QSize(0, 20))
 
-        self.gridLayout.addWidget(self.Stop_PushButton, 7, 0, 1, 3)
+        self.gridLayout.addWidget(self.Stop_PushButton, 8, 0, 1, 3)
 
         self.NumMeasurements_Label = QLabel(self.widget_13)
         self.NumMeasurements_Label.setObjectName(u"NumMeasurements_Label")
@@ -226,6 +258,10 @@ class Ui_SpotsizeWidget(object):
         self.Start_PushButton.setText(QCoreApplication.translate("SpotsizeWidget", u"Start", None))
         self.Stop_DoubleSpinBox.setSuffix(QCoreApplication.translate("SpotsizeWidget", u"\u00b0", None))
         self.Step_DoubleSpinBox.setSuffix(QCoreApplication.translate("SpotsizeWidget", u"\u00b0", None))
+        self.label_SettleTime.setText(QCoreApplication.translate("SpotsizeWidget", u"Settle Time (s)", None))
+        self.SettleTime_DoubleSpinBox.setSuffix(QCoreApplication.translate("SpotsizeWidget", u"s", None))
+        self.label_AveragingTime.setText(QCoreApplication.translate("SpotsizeWidget", u"Averaging Time (s)", None))
+        self.AveragingTime_DoubleSpinBox.setSuffix(QCoreApplication.translate("SpotsizeWidget", u"s", None))
         self.label_7.setText(QCoreApplication.translate("SpotsizeWidget", u"Stop", None))
         self.Stop_PushButton.setText(QCoreApplication.translate("SpotsizeWidget", u"Stop", None))
         self.NumMeasurements_Label.setText(QCoreApplication.translate("SpotsizeWidget", u"45", None))

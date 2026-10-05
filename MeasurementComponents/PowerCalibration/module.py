@@ -17,11 +17,14 @@ class PowerCalibrationModule(Module):
     ps_start = SFT.ObjectParameter("Power HWP Start Position", dtype=float, value=0.0, range=SFT.MinMaxRangeType(min=0.0, max=360.0, decimals=2), unit="°")
     ps_stop = SFT.ObjectParameter("Power HWP Stop Position", dtype=float, value=45.0, range=SFT.MinMaxRangeType(min=0.0, max=360.0), unit="°")
     ps_step = SFT.ObjectParameter("Power HWP Step", dtype=float, value=1.0, range=SFT.MinMaxRangeType(min=0.1, max=360.0), unit="°")
+    settle_time = SFT.ObjectParameter("Settle Time", dtype=float, value=0.2, unit="s", range=SFT.MinMaxRangeType(min=0.0, max=60.0, decimals=2))
+    averaging_time = SFT.ObjectParameter("Averaging Time", dtype=float, value=0.0, unit="s", range=SFT.MinMaxRangeType(min=0.0, max=60.0, decimals=2))
     n_measurements = SFT.ObjectParameter("N Measurements", dtype=int, value=46)
     save_directory = SFT.ObjectParameter("Save Directory", dtype=str, value=f"C:\\Measurements\\{dt.date.today().__str__().replace('-', '')}")
     save_filename = SFT.ObjectParameter("Save Filename", dtype=str, value="")
     angles_buffer = SFT.ObjectParameter("HWP Angles", dtype=np.ndarray, unit="°", value=np.array([]))
     powers_buffer = SFT.ObjectParameter("Powers", dtype=np.ndarray, unit="W", value=np.array([]))
+    measurement_running = SFT.ObjectParameter('Measurement Running', dtype=bool, value=False, readonly=True)
 
     interrupt_ActionParam = SFT.ActionParameter('Interrupt')
     run_ActionParam = SFT.ActionParameter("Run Power Calibration")
@@ -39,6 +42,7 @@ class PowerCalibrationModule(Module):
         self.interrupt_ActionParam.sigActivated.connect(self.interrupt)
         self.run_ActionParam.sigActivated.connect(lambda: self.task_run.run_on_pool())
         self._interrupted = False
+        self.active_power_adapter = None
 
     @QtCore.Slot()
     def interrupt(self):
@@ -46,12 +50,14 @@ class PowerCalibrationModule(Module):
 
     def run(self):
         self._interrupted = False
+        self.measurement_running.setValue(True)
         status = self.status.value()
         if status is not None:
             status.pause()
         try:
             self._run()
         finally:
+            self.measurement_running.setValue(False)
             if status is not None:
                 status.resume()
 
@@ -59,7 +65,6 @@ class PowerCalibrationModule(Module):
         start = self.ps_start.value()
         stop = self.ps_stop.value()
         step = self.ps_step.value()
-        hwp = self.hwp.value()
         pm = self.powermeter.value()
 
         datetime = dt.datetime.now()
@@ -70,10 +75,11 @@ class PowerCalibrationModule(Module):
         for pos in positions:
             if self._interrupted:
                 break
-            hwp.write_angle(pos)
-            sleep(0.2)
-            pm.reading.trigger_read().wait(2.0)
-            p = pm.reading.value()
+            self.active_power_adapter.set_setpoint(pos)
+            sleep(self.settle_time.value())
+            p = HelperFunctions().read_averaged_power(
+                pm, self.averaging_time.value(), is_interrupted=lambda: self._interrupted
+            )
             angles.append(pos)
             powers.append(p)
             self.angles_buffer.setValue(np.array(angles))

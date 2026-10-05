@@ -15,6 +15,8 @@ class SpotsizeView(TurboComponentView, Ui_SpotsizeWidget):
         SFT.connect_widget_to_param(self.Start_DoubleSpinBox, component.start)
         SFT.connect_widget_to_param(self.Stop_DoubleSpinBox, component.stop)
         SFT.connect_widget_to_param(self.Step_DoubleSpinBox, component.step)
+        SFT.connect_widget_to_param(self.SettleTime_DoubleSpinBox, component.settle_time)
+        SFT.connect_widget_to_param(self.AveragingTime_DoubleSpinBox, component.averaging_time)
         SFT.connect_widget_to_param(self.Axis_ComboBox, component.axis)
         SFT.connect_widget_to_param(self.Start_PushButton, component.run_ActionParam)
         SFT.connect_widget_to_param(self.Stop_PushButton, component.interrupt_ActionParam)

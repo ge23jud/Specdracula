@@ -315,6 +315,13 @@
                  </property>
                 </widget>
                </item>
+               <item row="4" column="0" colspan="2">
+                <widget class="QCheckBox" name="BSPowerMajor_CheckBox">
+                 <property name="text">
+                  <string>Sweep Power-First (all windows per power step)</string>
+                 </property>
+                </widget>
+               </item>
               </layout>
              </widget>
             </item>
@@ -346,37 +353,6 @@
                </item>
                <item row="0" column="1">
                 <widget class="QLineEdit" name="Directory_LineEdit"/>
-               </item>
-               <item row="2" column="1">
-                <widget class="QCheckBox" name="PxlCorrection_checkBox">
-                 <property name="text">
-                  <string>Apply Pixel Correction (preliminary!)</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="3" column="0">
-                <widget class="QCheckBox" name="ShowReference_CheckBox">
-                 <property name="text">
-                  <string>Show Reference Spectra</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="3" column="1">
-                <widget class="QPushButton" name="SelectReference_PushButton">
-                 <property name="text">
-                  <string>Select Reference Files...</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="4" column="0" colspan="2">
-                <widget class="QLabel" name="ReferenceFiles_Label">
-                 <property name="text">
-                  <string>No reference files selected</string>
-                 </property>
-                 <property name="wordWrap">
-                  <bool>true</bool>
-                 </property>
-                </widget>
                </item>
               </layout>
              </widget>

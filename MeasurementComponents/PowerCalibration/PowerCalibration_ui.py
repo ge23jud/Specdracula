@@ -151,6 +151,38 @@ class Ui_PowerCalibrationWidget(object):
 
         self.gridLayout.addWidget(self.label_8, 4, 0, 1, 1)
 
+        self.label_SettleTime = QLabel(self.widget_13)
+        self.label_SettleTime.setObjectName(u"label_SettleTime")
+        sizePolicy3.setHeightForWidth(self.label_SettleTime.sizePolicy().hasHeightForWidth())
+        self.label_SettleTime.setSizePolicy(sizePolicy3)
+
+        self.gridLayout.addWidget(self.label_SettleTime, 3, 0, 1, 1)
+
+        self.SettleTime_DoubleSpinBox = QDoubleSpinBox(self.widget_13)
+        self.SettleTime_DoubleSpinBox.setObjectName(u"SettleTime_DoubleSpinBox")
+        sizePolicy2.setHeightForWidth(self.SettleTime_DoubleSpinBox.sizePolicy().hasHeightForWidth())
+        self.SettleTime_DoubleSpinBox.setSizePolicy(sizePolicy2)
+        self.SettleTime_DoubleSpinBox.setMinimumSize(QSize(100, 10))
+        self.SettleTime_DoubleSpinBox.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
+
+        self.gridLayout.addWidget(self.SettleTime_DoubleSpinBox, 3, 1, 1, 2)
+
+        self.label_AveragingTime = QLabel(self.widget_13)
+        self.label_AveragingTime.setObjectName(u"label_AveragingTime")
+        sizePolicy3.setHeightForWidth(self.label_AveragingTime.sizePolicy().hasHeightForWidth())
+        self.label_AveragingTime.setSizePolicy(sizePolicy3)
+
+        self.gridLayout.addWidget(self.label_AveragingTime, 5, 0, 1, 1)
+
+        self.AveragingTime_DoubleSpinBox = QDoubleSpinBox(self.widget_13)
+        self.AveragingTime_DoubleSpinBox.setObjectName(u"AveragingTime_DoubleSpinBox")
+        sizePolicy2.setHeightForWidth(self.AveragingTime_DoubleSpinBox.sizePolicy().hasHeightForWidth())
+        self.AveragingTime_DoubleSpinBox.setSizePolicy(sizePolicy2)
+        self.AveragingTime_DoubleSpinBox.setMinimumSize(QSize(100, 10))
+        self.AveragingTime_DoubleSpinBox.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
+
+        self.gridLayout.addWidget(self.AveragingTime_DoubleSpinBox, 5, 1, 1, 2)
+
         self.gridLayout.setColumnStretch(0, 1)
 
         self.horizontalLayout_2.addWidget(self.widget_13)
@@ -211,6 +243,10 @@ class Ui_PowerCalibrationWidget(object):
         self.label_13.setText(QCoreApplication.translate("PowerCalibrationWidget", u"Start (\u00b0)", None))
         self.label_14.setText(QCoreApplication.translate("PowerCalibrationWidget", u"Step (\u00b0)", None))
         self.label_8.setText(QCoreApplication.translate("PowerCalibrationWidget", u"Measurements", None))
+        self.label_SettleTime.setText(QCoreApplication.translate("PowerCalibrationWidget", u"Settle Time (s)", None))
+        self.SettleTime_DoubleSpinBox.setSuffix(QCoreApplication.translate("PowerCalibrationWidget", u"s", None))
+        self.label_AveragingTime.setText(QCoreApplication.translate("PowerCalibrationWidget", u"Averaging Time (s)", None))
+        self.AveragingTime_DoubleSpinBox.setSuffix(QCoreApplication.translate("PowerCalibrationWidget", u"s", None))
         self.label.setText(QCoreApplication.translate("PowerCalibrationWidget", u"Directory", None))
         self.label_2.setText(QCoreApplication.translate("PowerCalibrationWidget", u"Filename", None))
     # retranslateUi

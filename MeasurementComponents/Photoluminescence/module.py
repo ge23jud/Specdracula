@@ -45,6 +45,7 @@ class PhotoluminescenceModule(Module):
     hwp = SFT.ObjectParameter("HWP", SFT.TurboComponent)
     powermeter = SFT.ObjectParameter("Powermeter", SFT.TurboComponent)
     status = SFT.ObjectParameter("Status", SFT.TurboComponent)
+    shutter = SFT.ObjectParameter("Shutter", SFT.TurboComponent)
 
     y_scale = SFT.ObjectParameter("Y scale", dtype=str, value="Linear", range=SFT.ChoiceRangeType(**{"Linear": 0, "Logarithmic": 1}), doc="Y-axis scale type")
     x_label = SFT.ObjectParameter("X Label", dtype=str, value="Energy", range=SFT.ChoiceRangeType(**{"Energy": 0, "Wavelength": 1}), doc="X-label")
@@ -55,6 +56,7 @@ class PhotoluminescenceModule(Module):
     powercal_filepath = SFT.ObjectParameter("Power Calibration File", dtype=str, value="")
     n_measurements = SFT.ObjectParameter("N Measurements", dtype=int, value=0)
     current_angles = SFT.ObjectParameter("Current Sweep Angles", dtype=np.ndarray, value=None, readonly=True)
+    current_power_index = SFT.ObjectParameter("Current Power Index", dtype=int, value=0, readonly=True)
     extra_timeout = SFT.ObjectParameter('Acquisition timeout', dtype=float, unit='s', value=3.0)
     wavelength_nm = SFT.ObjectParameter('Wavelength', dtype=np.ndarray, unit='nm', value=None, readonly=True)
     energy_ev = SFT.ObjectParameter("Energy", dtype=np.ndarray, unit="eV", value=None, readonly=True)
@@ -63,10 +65,11 @@ class PhotoluminescenceModule(Module):
     intensity_counts_powerseries_complete = SFT.ObjectParameter("Intensities for Powerseries Complete Array", dtype=np.ndarray, value=None, readonly=True)
     stitch_edge_nm = SFT.ObjectParameter('Stitch Edges', dtype=np.ndarray, value=None, readonly=True)
     measurement_running = SFT.ObjectParameter('Measurement Running', dtype=bool, value=False, readonly=True)
+    total_measurement_steps = SFT.ObjectParameter('Total Measurement Steps', dtype=int, value=0, readonly=True)
+    completed_measurement_steps = SFT.ObjectParameter('Completed Measurement Steps', dtype=int, value=0, readonly=True)
     powers = SFT.ObjectParameter("Powers", dtype=np.ndarray, value=None)
     repetitions = SFT.ObjectParameter('Repetitions', dtype=int, value=1, readonly=False)
     averaging = SFT.ObjectParameter('Averaging', dtype=bool, value=True, readonly=False)
-    pixel_correction_enabled = SFT.ObjectParameter('Pixel Correction', dtype=bool, value=False)
     colorscheme = SFT.ObjectParameter(
         'Color Scheme', dtype=str, value='Viridis',
         range=SFT.ChoiceRangeType(**{'Viridis': 0, 'Spectral': 1, 'CoolWarm': 2, 'Warm': 3, 'Turbo': 4})
@@ -78,6 +81,7 @@ class PhotoluminescenceModule(Module):
                                         range=SFT.MinMaxRangeType(min=0.1, max=6.0, decimals=3))
     bs_overlap = SFT.ObjectParameter('BS Overlap', dtype=float, value=0.05, unit='eV',
                                      range=SFT.MinMaxRangeType(min=0.0, max=1.0, decimals=3))
+    bs_power_major = SFT.ObjectParameter('BS Power-Major Order', dtype=bool, value=False)
     #integration_time = SFT.ObjectParameter()
     save_directory = SFT.ObjectParameter("Save Directory", dtype=str, value=f"C:\Measurements\{dt.date.today().__str__().replace("-", "")}")
     save_filename = SFT.ObjectParameter("Save Filename", dtype=str, value="")
@@ -93,9 +97,6 @@ class PhotoluminescenceModule(Module):
 
     def __init__(self, name=None, parent=None):
         super().__init__(name=name, parent=parent)
-
-        _corr_path = os.path.join(os.path.dirname(__file__), 'pixel_correction_2.txt')
-        self._pixel_correction = np.loadtxt(_corr_path)[::-1]  # file is energy order; reverse for wavelength/pixel order
 
         self.ps_start.sigValueChanged.connect(self._on_ps_input_update_nmeasurements_value)
         self.ps_stop.sigValueChanged.connect(self._on_ps_input_update_nmeasurements_value)
@@ -116,6 +117,7 @@ class PhotoluminescenceModule(Module):
         self._interrupted = False
         self._sweep_filenumber = None
         self._sweep_index = None
+        self.active_power_adapter = None
         #self.file_exporters["HDF files (*.h5)"] = AndorCCDReadoutMeasure.to_hdf
 
         self.wavelength_nm.sigValueChanged.connect(self._update_energy_array)
@@ -187,6 +189,20 @@ class PhotoluminescenceModule(Module):
         self._interrupted = True
 
 
+    def is_shutter_open(self):
+        """Live hardware read of the excitation shutter state.
+
+        Bypasses the shutter's own `is_open` parameter, which only reflects the
+        last value read/written through it -- the dashboard now writes the
+        shutter directly via the driver to avoid a stale-readback race, so
+        `is_open` can no longer be trusted as current.
+        """
+        shutter = self.shutter.value()
+        if shutter is None:
+            return True
+        return bool(shutter.device.get_shutter_state(shutter.shutter_id.value()))
+
+
     def get_wavelength_calibration(self):
         # First collect the WL if required:
         if self.spectrograph.value() is None:
@@ -234,8 +250,6 @@ class PhotoluminescenceModule(Module):
                 new_counts = cam.acquire_wait.result[0].copy()
                 if new_counts is None:
                     raise Exception('camera returned no counts yet. you need to wait for acquisition')
-                if self.pixel_correction_enabled.value():
-                    new_counts = new_counts / self._pixel_correction
                 if averaging:
                     if counts is None:
                         # first iteration
@@ -268,6 +282,7 @@ class PhotoluminescenceModule(Module):
 
 
     def powerseries(self):
+        self._interrupted = False
         self.measurement_running.setValue(True)
         status = self.status.value()
         if status is not None:
@@ -280,9 +295,11 @@ class PhotoluminescenceModule(Module):
             self.measurement_running.setValue(False)
 
     def _powerseries(self):
+        self.completed_measurement_steps.setValue(0)
         if self.bs_enable.value():
             self._bandwidth_sweep_powerseries()
         else:
+            self.total_measurement_steps.setValue(self.n_measurements.value())
             self._single_powerseries()
 
     def _bandwidth_sweep_powerseries(self):
@@ -327,25 +344,131 @@ class PhotoluminescenceModule(Module):
         print(f'Bandwidth sweep: {len(centers)} positions, W_nm={W_nm:.1f} nm, overlap={overlap:.3f} eV')
         print(f'Center energies (eV): {[f"{c:.4f}" for c in centers]}')
 
+        self.total_measurement_steps.setValue(len(centers) * self.n_measurements.value())
+
         # All positions of one sweep share a single leading file number; each position
         # is distinguished by a "_NN" sub-index instead of bumping the leading number.
         self._sweep_filenumber = HelperFunctions().get_next_file_number(self.save_directory.value())
         self._sweep_index = 0
         try:
-            for E_center in centers:
+            if self.bs_power_major.value():
+                self._bandwidth_sweep_power_major(centers)
+            else:
+                self._bandwidth_sweep_window_major(centers)
+        finally:
+            self._sweep_filenumber = None
+            self._sweep_index = None
+
+    def _bandwidth_sweep_window_major(self, centers):
+        """Original order: for each energy window, run a full powerseries
+        (sweeping all powers) before moving to the next window."""
+        spec = self.spectrograph.value()
+        for E_center in centers:
+            if self._interrupted:
+                break
+            λ_m = _HC_EV_NM / E_center * 1e-9
+            spec.center_wavelength.write_to_device(λ_m)
+            spec.center_wavelength.trigger_read().wait(30.0)
+            spec.wavelength_calib.trigger_read().wait(5.0)
+            self._single_powerseries()
+            wl = self.wavelength_nm.value()
+            if wl is not None and len(wl) >= 2:
+                self.stitch_edge_nm.setValue(np.array([wl[0], wl[-1]]))
+
+    def _bandwidth_sweep_power_major(self, centers):
+        """For each power, visit every energy window before moving to the next
+        power. Acquisition order is power-major, but each window's data is
+        buffered and written out at the end in the same one-file-per-window
+        (all powers) layout as the window-major order."""
+        spec = self.spectrograph.value()
+        pm = self.powermeter.value()
+
+        n = self.n_measurements.value()
+        if n <= 0:
+            return
+        start = self.ps_start.value()
+        stop = self.ps_stop.value()
+        step = self.ps_step.value()
+        if self.ps_log_steps.value() and self.active_power_adapter.supports_log_calibration():
+            angles = self._log_power_angles(start, stop, n)
+        elif self.ps_log_steps.value():
+            angles = np.geomspace(start, stop, n)
+        else:
+            angles = start + np.arange(n) * step
+        self.current_angles.setValue(angles)
+
+        n_windows = len(centers)
+        no_pixels = spec.detector_pixels.value()
+        window_data = [np.empty((n, no_pixels)) for _ in range(n_windows)]
+        window_wavelength = [None] * n_windows
+        window_center_wavelength = [None] * n_windows
+        data_power = np.empty(n)
+        data_angle = np.empty(n)
+
+        self.active_power_adapter.set_setpoint(angles[0])
+        print("Number of Measurements:", n)
+        print(f'Bandwidth sweep (power-major): {n_windows} windows x {n} powers')
+
+        for i in range(n):
+            if self._interrupted:
+                break
+            self.active_power_adapter.set_setpoint(angles[i])
+            data_angle[i] = angles[i]
+            self.current_power_index.setValue(i)
+            pm.reading.trigger_read().wait(2.0)
+            data_power[i] = pm.reading.value()
+            self.powers.setValue(data_power)
+
+            for w, E_center in enumerate(centers):
                 if self._interrupted:
                     break
                 λ_m = _HC_EV_NM / E_center * 1e-9
                 spec.center_wavelength.write_to_device(λ_m)
                 spec.center_wavelength.trigger_read().wait(30.0)
                 spec.wavelength_calib.trigger_read().wait(5.0)
-                self._single_powerseries()
-                wl = self.wavelength_nm.value()
-                if wl is not None and len(wl) >= 2:
-                    self.stitch_edge_nm.setValue(np.array([wl[0], wl[-1]]))
-        finally:
-            self._sweep_filenumber = None
-            self._sweep_index = None
+                self._acquire(self.intensity_counts_powerseries, self.wavelength_nm, self.averaging.value(), False)
+                window_wavelength[w] = self.wavelength_nm.value()
+                window_center_wavelength[w] = spec.center_wavelength.value() * 1e9
+                window_data[w][i, :] = self.intensity_counts_powerseries.value().flatten()
+                self.intensity_counts_powerseries_complete.setValue(window_data[w])
+                if i == 0:
+                    # each window's stitch edge only needs to be reported once,
+                    # not on every revisit as the power loop cycles back through it
+                    wl = window_wavelength[w]
+                    if wl is not None and len(wl) >= 2:
+                        self.stitch_edge_nm.setValue(np.array([wl[0], wl[-1]]))
+                self.completed_measurement_steps.setValue(self.completed_measurement_steps.value() + 1)
+
+        self._write_bandwidth_sweep_power_major_files(
+            window_wavelength, window_center_wavelength, window_data, data_power, data_angle
+        )
+
+    def _write_bandwidth_sweep_power_major_files(
+        self, window_wavelength, window_center_wavelength, window_data, data_power, data_angle
+    ):
+        cam = self.camera.value()
+        spec = self.spectrograph.value()
+        datetime = dt.datetime.now()
+        temperature = 0  # to implement
+        integration_time = cam.exposure.value()
+        entrance_slit_width = spec.entrance_slit_direct.value() * 1e3  # convert to mm
+        exit_slit_width = 0
+        excitation_power = data_power
+        power = excitation_power[0]
+
+        for w, wavelength in enumerate(window_wavelength):
+            if wavelength is None:
+                continue  # window never reached (sweep interrupted before it started)
+            center_wavelength = window_center_wavelength[w]
+            center_energy = HelperFunctions().wavelength_energy_converter(center_wavelength)
+            dispersion_window = wavelength[-1] - wavelength[0]
+            intensity = window_data[w].T
+            filepath = self.update_save_string(integration_time, center_energy)
+            HelperFunctions().write_origin(
+                datetime, "Powerseries", temperature, integration_time, power,
+                center_wavelength, dispersion_window, entrance_slit_width, exit_slit_width,
+                wavelength, excitation_power, data_angle, intensity, filepath
+            )
 
     def _log_power_angles(self, start_angle, stop_angle, n):
         """HWP angles for `n` measurements whose *powers* are log-spaced between
@@ -411,19 +534,20 @@ class PhotoluminescenceModule(Module):
         start = self.ps_start.value()
         stop = self.ps_stop.value()
         step = self.ps_step.value()
-        hwp = self.hwp.value()
         spec = self.spectrograph.value()
 
         n = self.n_measurements.value()
         if n <= 0:
             return
-        if self.ps_log_steps.value():
+        if self.ps_log_steps.value() and self.active_power_adapter.supports_log_calibration():
             angles = self._log_power_angles(start, stop, n)
+        elif self.ps_log_steps.value():
+            angles = np.geomspace(start, stop, n)
         else:
             angles = start + np.arange(n) * step
         self.current_angles.setValue(angles)
 
-        hwp.write_angle(angles[0])
+        self.active_power_adapter.set_setpoint(angles[0])
 
         no_pixels = spec.detector_pixels.value()
         data = np.empty((n, no_pixels))
@@ -448,9 +572,12 @@ class PhotoluminescenceModule(Module):
 
 
         for i in range(n):
+            if self._interrupted:
+                break
 
-            hwp.write_angle(angles[i])
+            self.active_power_adapter.set_setpoint(angles[i])
             data_angle[i] = angles[i]
+            self.current_power_index.setValue(i)
             self._acquire(self.intensity_counts_powerseries, self.wavelength_nm, self.averaging.value(), False)
             pm.reading.trigger_read().wait(2.0)
             power = pm.reading.value()
@@ -458,6 +585,7 @@ class PhotoluminescenceModule(Module):
             self.powers.setValue(data_power)
             data[i, :] = self.intensity_counts_powerseries.value().flatten()
             self.intensity_counts_powerseries_complete.setValue(data)
+            self.completed_measurement_steps.setValue(self.completed_measurement_steps.value() + 1)
 
         intensity = self.intensity_counts_powerseries_complete.value().T
         wavelength = self.wavelength_nm.value()

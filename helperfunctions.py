@@ -5,11 +5,37 @@ import datetime as dt
 import math
 import os
 import re
+import time
 
 class HelperFunctions():
 
     def wavelength_energy_converter(self, array):
         return h*c/array *1e9 /e
+
+    def read_averaged_power(self, pm, duration, is_interrupted=None):
+        """Average the power meter's reading over `duration` seconds.
+
+        Repeatedly triggers a fresh read and averages the results. If
+        `duration` is 0 (or less), takes a single reading. `is_interrupted`,
+        if given, is polled between reads so a running sweep can bail out early.
+        """
+        if duration <= 0:
+            pm.reading.trigger_read().wait(2.0)
+            return float(pm.reading.value())
+
+        readings = []
+        deadline = time.monotonic() + duration
+        while time.monotonic() < deadline:
+            if is_interrupted is not None and is_interrupted():
+                break
+            pm.reading.trigger_read().wait(2.0)
+            readings.append(pm.reading.value())
+
+        if not readings:
+            pm.reading.trigger_read().wait(2.0)
+            readings.append(pm.reading.value())
+
+        return float(np.mean(readings))
 
 
     def get_next_file_number(self, directory: str) -> str:

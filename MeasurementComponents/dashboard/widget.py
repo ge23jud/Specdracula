@@ -40,9 +40,6 @@ class DashboardView(TurboComponentView, Ui_DashboardWidget):
         SFT.connect_widget_to_param(self.PiezoY_DoubleSpinBox, component.piezo_y)
         SFT.connect_widget_to_param(self.PiezoStep_DoubleSpinBox, component.piezo_step)
         SFT.connect_widget_to_param(self.HWPPos_DoubleSpinBox, component.hwp_position)
-        SFT.connect_widget_to_param(self.Grating_ComboBox, component.selected_grating)
-        SFT.connect_widget_to_param(self.InputMirror_ComboBox, component.input_mirror)
-        SFT.connect_widget_to_param(self.OutputMirror_ComboBox, component.output_mirror)
         SFT.connect_widget_to_param(self.DirectInputSlit_DoubleSpinBox, component.direct_input_slit_width)
         SFT.connect_widget_to_param(self.SideInputSlit_DoubleSpinBox, component.side_input_slit_width)
         SFT.connect_widget_to_param(self.PiezoUp_Button, component.step_up_ActionParam)
@@ -50,7 +47,10 @@ class DashboardView(TurboComponentView, Ui_DashboardWidget):
         SFT.connect_widget_to_param(self.PiezoLeft_Button, component.step_left_ActionParam)
         SFT.connect_widget_to_param(self.PiezoRight_Button, component.step_right_ActionParam)
         SFT.connect_widget_to_param(self.Shutter_CheckBox, component.excitation_shutter)
-        
+        SFT.connect_widget_to_param(self.ActiveLaser_ComboBox, component.active_laser)
+        SFT.connect_widget_to_param(self.Laser2On_CheckBox, component.laser2_on)
+        SFT.connect_widget_to_param(self.Laser2Power_DoubleSpinBox, component.laser2_power)
+
     
     def disable_scroll_to_change(self):
         """Make all dashboard value controls ignore mouse-wheel scrolling.
@@ -67,11 +67,10 @@ class DashboardView(TurboComponentView, Ui_DashboardWidget):
             self.PiezoY_DoubleSpinBox,
             self.PiezoStep_DoubleSpinBox,
             self.HWPPos_DoubleSpinBox,
-            self.Grating_ComboBox,
-            self.InputMirror_ComboBox,
-            self.OutputMirror_ComboBox,
             self.DirectInputSlit_DoubleSpinBox,
             self.SideInputSlit_DoubleSpinBox,
+            self.ActiveLaser_ComboBox,
+            self.Laser2Power_DoubleSpinBox,
         ]
         for control in controls:
             control.installEventFilter(self._wheel_blocker)

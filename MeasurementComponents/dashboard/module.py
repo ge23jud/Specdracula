@@ -11,6 +11,7 @@ class DashboardModule(Module):
     spectrograph = SFT.ObjectParameter('Spectrograph', SFT.TurboComponent)
     piezo = SFT.ObjectParameter('Piezo', SFT.TurboComponent)
     shutter = SFT.ObjectParameter('Shutter', SFT.TurboComponent)
+    laser2 = SFT.ObjectParameter('Laser 2', SFT.TurboComponent)
 
     center_wavelength = SFT.PhysicalParameter("Center Wavelength", dtype=float, value=1e-6, unit="m")
 
@@ -23,9 +24,15 @@ class DashboardModule(Module):
     selected_grating = SFT.PhysicalParameter('Selected grating', dtype=str, value="150 l/mm", range=SFT.ChoiceRangeType(**{"150 l/mm": 1, "300 l/mm": 2}))
     input_mirror = SFT.PhysicalParameter("Input Mirror", dtype=str, value="Direct", range=SFT.ChoiceRangeType(**{"Direct": 0, "Side": 1}))
     output_mirror = SFT.PhysicalParameter("Output Mirror", dtype=str, value="Side", range=SFT.ChoiceRangeType(**{"Direct": 0, "Side": 1}))
-    direct_input_slit_width = SFT.PhysicalParameter("Direct Input Slit Width", dtype=float, value=100e-6, unit="m", range=SFT.MinMaxRangeType(min=10e-6, max=2000e-6))
-    side_input_slit_width = SFT.PhysicalParameter("Side Input Slit Width", dtype=float, value=100e-6, unit="m", range=SFT.MinMaxRangeType(min=10e-6, max=2000e-6))
+    direct_input_slit_width = SFT.PhysicalParameter("Direct Input Slit Width", dtype=float, value=500e-6, unit="m", range=SFT.MinMaxRangeType(min=10e-6, max=2000e-6))
+    side_input_slit_width = SFT.PhysicalParameter("Side Input Slit Width", dtype=float, value=500e-6, unit="m", range=SFT.MinMaxRangeType(min=10e-6, max=2000e-6))
     excitation_shutter = SFT.PhysicalParameter("Excitation Shutter", dtype=bool, value=False)
+    laser2_on = SFT.PhysicalParameter("Laser On", dtype=bool, value=False)
+    laser2_power = SFT.PhysicalParameter("Laser 2 Power", dtype=float, value=0., unit="mW")
+    active_laser = SFT.ObjectParameter(
+        "Active Laser", dtype=str, value="Laser 1 (HWP)",
+        range=SFT.ChoiceRangeType(**{"Laser 1 (HWP)": 0, "Laser 2 (KLS)": 1})
+    )
 
     step_up_ActionParam = SFT.ActionParameter('Step Up')
     step_down_ActionParam = SFT.ActionParameter('Step Down')
@@ -80,11 +87,13 @@ class DashboardModule(Module):
             read_func=self.get_direct_input_slit_width,
             write_func=self.set_direct_input_slit_width
         )
+        self.direct_input_slit_width.write_to_device(500e-6).wait(5.0)
 
         self.side_input_slit_width.connect_to_hardware(
             read_func=self.get_side_input_slit_width,
             write_func=self.set_side_input_slit_width
         )
+        self.side_input_slit_width.write_to_device(500e-6).wait(5.0)
 
         self.input_mirror.connect_to_hardware(
             read_func=self.get_input_mirror,
@@ -111,17 +120,37 @@ class DashboardModule(Module):
             write_func=self.set_excitation_shutter
         )
 
-        # Integration time and HWP position can change from elsewhere (e.g. a PL
-        # powerseries sweep moves the HWP directly). Rather than polling the
-        # hardware on a timer -- which raced with Live PL acquisition and HWP
-        # moves and made both unresponsive -- mirror the driver's own parameters,
-        # which the driver already keeps current after every move/change.
+        self.laser2_on.connect_to_hardware(
+            read_func=self.get_laser2_on,
+            write_func=self.set_laser2_on
+        )
+
+        self.laser2_power.connect_to_hardware(
+            read_func=self.get_laser2_power,
+            write_func=self.set_laser2_power
+        )
+        laser2 = self.laser2.value()
+        self.laser2_power.set_range(laser2.power_setpoint.range)
+        self.laser2_power.set_unit(laser2.power_setpoint.unit)
+
+        # Integration time, HWP position, and laser 2 on/power can all change
+        # from elsewhere (e.g. a PL powerseries sweep moves the HWP or laser 2
+        # directly). Rather than polling the hardware on a timer -- which raced
+        # with Live PL acquisition and HWP moves and made both unresponsive --
+        # mirror the driver's own parameters, which are kept current after
+        # every move/change regardless of who made it.
         hwp = self.halfwaveplate.value()
         hwp.angle.sigValueChanged.connect(self._on_hwp_angle_changed)
         self._on_hwp_angle_changed()  # seed with the already-current value
 
         self.cam.exposure.sigValueChanged.connect(self._on_exposure_changed)
         self._on_exposure_changed()  # seed with the already-current value
+
+        laser2.is_on.sigValueChanged.connect(self._on_laser2_on_changed)
+        self._on_laser2_on_changed()  # seed with the already-current value
+
+        laser2.power_setpoint.sigValueChanged.connect(self._on_laser2_power_changed)
+        self._on_laser2_power_changed()  # seed with the already-current value
 
     @QtCore.Slot()
     def _on_hwp_angle_changed(self):
@@ -130,6 +159,14 @@ class DashboardModule(Module):
     @QtCore.Slot()
     def _on_exposure_changed(self):
         self.integration_time.setValue(self.cam.exposure.value())
+
+    @QtCore.Slot()
+    def _on_laser2_on_changed(self):
+        self.laser2_on.setValue(self.laser2.value().is_on.value())
+
+    @QtCore.Slot()
+    def _on_laser2_power_changed(self):
+        self.laser2_power.setValue(self.laser2.value().power_setpoint.value())
 
     def set_output_mirror(self, mirror):
         self.spec.host.SetFlipperMirror(int(self.dev_id), 2, int(self.output_mirror.range[mirror]))
@@ -203,12 +240,30 @@ class DashboardModule(Module):
         return self.piezo.value().get_single_position_SI('y') * 1e6
 
     def set_excitation_shutter(self, is_open):
+        # Checkbox "Shutter open": checked -> shutter open. The mapping to the
+        # driver is inverted relative to set_shutter_state's open/closed flag.
         shutter = self.shutter.value()
-        shutter.device.set_shutter_state(shutter.shutter_id.value(), bool(is_open))
+        shutter.device.set_shutter_state(shutter.shutter_id.value(), not bool(is_open))
 
     def get_excitation_shutter(self):
         shutter = self.shutter.value()
-        return shutter.device.get_shutter_state(shutter.shutter_id.value())
+        return not shutter.device.get_shutter_state(shutter.shutter_id.value())
+
+    def set_laser2_on(self, on):
+        laser2 = self.laser2.value()
+        laser2.device.set_output_enabled(bool(on))
+        laser2.is_on.setValue(bool(on))
+
+    def get_laser2_on(self):
+        return self.laser2.value().device.get_output_enabled()
+
+    def set_laser2_power(self, value):
+        laser2 = self.laser2.value()
+        laser2.device.set_power_setpoint(value)
+        laser2.power_setpoint.setValue(value)
+
+    def get_laser2_power(self):
+        return self.laser2.value().device.get_power_setpoint()
 
     def _step(self, axis, direction):
         piezo = self.piezo.value()

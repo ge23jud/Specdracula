@@ -15,8 +15,8 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QAbstractSpinBox, QApplication, QCheckBox, QComboBox,
-    QDoubleSpinBox, QFrame, QGridLayout, QGroupBox,
+from PySide6.QtWidgets import (QAbstractSpinBox, QApplication, QCheckBox,
+    QComboBox, QDoubleSpinBox, QFrame, QGridLayout, QGroupBox,
     QLabel, QLayout, QPushButton, QScrollArea,
     QSizePolicy, QSpacerItem, QVBoxLayout, QWidget)
 
@@ -68,16 +68,6 @@ class Ui_DashboardWidget(object):
 
         self.gridLayout_4.addWidget(self.label_8, 4, 0, 1, 1)
 
-        self.OutputMirror_ComboBox = QComboBox(self.groupBox_2)
-        self.OutputMirror_ComboBox.setObjectName(u"OutputMirror_ComboBox")
-
-        self.gridLayout_4.addWidget(self.OutputMirror_ComboBox, 7, 1, 1, 1)
-
-        self.label_7 = QLabel(self.groupBox_2)
-        self.label_7.setObjectName(u"label_7")
-
-        self.gridLayout_4.addWidget(self.label_7, 7, 0, 1, 1)
-
         self.label_18 = QLabel(self.groupBox_2)
         self.label_18.setObjectName(u"label_18")
 
@@ -101,11 +91,6 @@ class Ui_DashboardWidget(object):
         self.DirectInputSlit_DoubleSpinBox.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
 
         self.gridLayout_4.addWidget(self.DirectInputSlit_DoubleSpinBox, 5, 1, 1, 1)
-
-        self.label_5 = QLabel(self.groupBox_2)
-        self.label_5.setObjectName(u"label_5")
-
-        self.gridLayout_4.addWidget(self.label_5, 6, 0, 1, 1)
 
         self.SideInputSlit_DoubleSpinBox = QDoubleSpinBox(self.groupBox_2)
         self.SideInputSlit_DoubleSpinBox.setObjectName(u"SideInputSlit_DoubleSpinBox")
@@ -137,23 +122,6 @@ class Ui_DashboardWidget(object):
 
         self.gridLayout_4.addWidget(self.label_22, 5, 0, 1, 1)
 
-        self.label_20 = QLabel(self.groupBox_2)
-        self.label_20.setObjectName(u"label_20")
-
-        self.gridLayout_4.addWidget(self.label_20, 8, 0, 1, 1)
-
-        self.Grating_ComboBox = QComboBox(self.groupBox_2)
-        self.Grating_ComboBox.setObjectName(u"Grating_ComboBox")
-        self.Grating_ComboBox.setMinimumSize(QSize(0, 25))
-        self.Grating_ComboBox.setMaximumSize(QSize(16777215, 25))
-
-        self.gridLayout_4.addWidget(self.Grating_ComboBox, 8, 1, 1, 1)
-
-        self.InputMirror_ComboBox = QComboBox(self.groupBox_2)
-        self.InputMirror_ComboBox.setObjectName(u"InputMirror_ComboBox")
-
-        self.gridLayout_4.addWidget(self.InputMirror_ComboBox, 6, 1, 1, 1)
-
         self.gridLayout_4.setColumnStretch(1, 1)
 
         self.verticalLayout_2.addWidget(self.groupBox_2)
@@ -168,16 +136,9 @@ class Ui_DashboardWidget(object):
         self.gridLayout = QGridLayout(self.groupBox_4)
         self.gridLayout.setObjectName(u"gridLayout")
         self.gridLayout.setSizeConstraint(QLayout.SizeConstraint.SetDefaultConstraint)
-        self.DetectorTemperature_Label = QLabel(self.groupBox_4)
-        self.DetectorTemperature_Label.setObjectName(u"DetectorTemperature_Label")
         sizePolicy4 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         sizePolicy4.setHorizontalStretch(0)
         sizePolicy4.setVerticalStretch(0)
-        sizePolicy4.setHeightForWidth(self.DetectorTemperature_Label.sizePolicy().hasHeightForWidth())
-        self.DetectorTemperature_Label.setSizePolicy(sizePolicy4)
-        self.DetectorTemperature_Label.setMinimumSize(QSize(0, 25))
-
-        self.gridLayout.addWidget(self.DetectorTemperature_Label, 2, 1, 1, 1)
 
         self.IntegrationTime_DoubleSpinBox = QDoubleSpinBox(self.groupBox_4)
         self.IntegrationTime_DoubleSpinBox.setObjectName(u"IntegrationTime_DoubleSpinBox")
@@ -193,11 +154,6 @@ class Ui_DashboardWidget(object):
         self.label.setObjectName(u"label")
 
         self.gridLayout.addWidget(self.label, 1, 0, 1, 1)
-
-        self.label_4 = QLabel(self.groupBox_4)
-        self.label_4.setObjectName(u"label_4")
-
-        self.gridLayout.addWidget(self.label_4, 2, 0, 1, 1)
 
         self.verticalSpacer_2 = QSpacerItem(20, 15, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
 
@@ -299,6 +255,19 @@ class Ui_DashboardWidget(object):
         self.gridLayout_2.setObjectName(u"gridLayout_2")
         self.gridLayout_2.setVerticalSpacing(6)
         self.gridLayout_2.setContentsMargins(9, 9, -1, -1)
+        self.label_ActiveLaser = QLabel(self.groupBox_6)
+        self.label_ActiveLaser.setObjectName(u"label_ActiveLaser")
+        self.label_ActiveLaser.setMinimumSize(QSize(0, 30))
+
+        self.gridLayout_2.addWidget(self.label_ActiveLaser, 0, 0, 1, 1)
+
+        self.ActiveLaser_ComboBox = QComboBox(self.groupBox_6)
+        self.ActiveLaser_ComboBox.addItem("")
+        self.ActiveLaser_ComboBox.addItem("")
+        self.ActiveLaser_ComboBox.setObjectName(u"ActiveLaser_ComboBox")
+
+        self.gridLayout_2.addWidget(self.ActiveLaser_ComboBox, 0, 1, 1, 1)
+
         self.label_11 = QLabel(self.groupBox_6)
         self.label_11.setObjectName(u"label_11")
         self.label_11.setMinimumSize(QSize(0, 30))
@@ -318,6 +287,26 @@ class Ui_DashboardWidget(object):
         self.Shutter_CheckBox.setMinimumSize(QSize(0, 25))
 
         self.gridLayout_2.addWidget(self.Shutter_CheckBox, 2, 0, 1, 2)
+
+        self.Laser2On_CheckBox = QCheckBox(self.groupBox_6)
+        self.Laser2On_CheckBox.setObjectName(u"Laser2On_CheckBox")
+        self.Laser2On_CheckBox.setMinimumSize(QSize(0, 25))
+
+        self.gridLayout_2.addWidget(self.Laser2On_CheckBox, 4, 0, 1, 2)
+
+        self.label_Laser2Power = QLabel(self.groupBox_6)
+        self.label_Laser2Power.setObjectName(u"label_Laser2Power")
+        self.label_Laser2Power.setMinimumSize(QSize(0, 30))
+
+        self.gridLayout_2.addWidget(self.label_Laser2Power, 5, 0, 1, 1)
+
+        self.Laser2Power_DoubleSpinBox = QDoubleSpinBox(self.groupBox_6)
+        self.Laser2Power_DoubleSpinBox.setObjectName(u"Laser2Power_DoubleSpinBox")
+        self.Laser2Power_DoubleSpinBox.setMinimumSize(QSize(0, 25))
+        self.Laser2Power_DoubleSpinBox.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self.Laser2Power_DoubleSpinBox.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
+
+        self.gridLayout_2.addWidget(self.Laser2Power_DoubleSpinBox, 5, 1, 1, 1)
 
         self.verticalSpacer_4 = QSpacerItem(20, 15, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
 
@@ -356,19 +345,14 @@ class Ui_DashboardWidget(object):
         DashboardWidget.setWindowTitle(QCoreApplication.translate("DashboardWidget", u"Form", None))
         self.groupBox_2.setTitle(QCoreApplication.translate("DashboardWidget", u"Spectrometer", None))
         self.label_8.setText(QCoreApplication.translate("DashboardWidget", u"Side Input Slit", None))
-        self.label_7.setText(QCoreApplication.translate("DashboardWidget", u"Output Mirror", None))
         self.label_18.setText(QCoreApplication.translate("DashboardWidget", u"Center Wavelength", None))
         self.CenterEnergy_DoubleSpinBox.setSuffix("")
-        self.label_5.setText(QCoreApplication.translate("DashboardWidget", u"Input Mirror", None))
         self.CenterWavelength_DoubleSpinBox.setSuffix("")
         self.label_19.setText(QCoreApplication.translate("DashboardWidget", u"Center Energy", None))
         self.label_22.setText(QCoreApplication.translate("DashboardWidget", u"Direct Input Slit", None))
-        self.label_20.setText(QCoreApplication.translate("DashboardWidget", u"Grating", None))
         self.groupBox_4.setTitle(QCoreApplication.translate("DashboardWidget", u"Detector", None))
-        self.DetectorTemperature_Label.setText(QCoreApplication.translate("DashboardWidget", u"TextLabel", None))
         self.IntegrationTime_DoubleSpinBox.setSuffix("")
         self.label.setText(QCoreApplication.translate("DashboardWidget", u"Integration Time", None))
-        self.label_4.setText(QCoreApplication.translate("DashboardWidget", u"Temperature", None))
         self.groupBox_3.setTitle(QCoreApplication.translate("DashboardWidget", u"Piezo", None))
         self.label_6.setText(QCoreApplication.translate("DashboardWidget", u"Step", None))
         self.label_2.setText(QCoreApplication.translate("DashboardWidget", u"X-Position", None))
@@ -381,8 +365,14 @@ class Ui_DashboardWidget(object):
         self.PiezoY_DoubleSpinBox.setSuffix("")
         self.PiezoStep_DoubleSpinBox.setSuffix("")
         self.groupBox_6.setTitle(QCoreApplication.translate("DashboardWidget", u"Power Control", None))
+        self.label_ActiveLaser.setText(QCoreApplication.translate("DashboardWidget", u"Active Laser", None))
+        self.ActiveLaser_ComboBox.setItemText(0, QCoreApplication.translate("DashboardWidget", u"Laser 1 (HWP)", None))
+        self.ActiveLaser_ComboBox.setItemText(1, QCoreApplication.translate("DashboardWidget", u"Laser 2 (KLS)", None))
         self.label_11.setText(QCoreApplication.translate("DashboardWidget", u"Power HWP Position", None))
         self.HWPPos_DoubleSpinBox.setSuffix("")
-        self.Shutter_CheckBox.setText(QCoreApplication.translate("DashboardWidget", u"Excitation Shutter", None))
+        self.Shutter_CheckBox.setText(QCoreApplication.translate("DashboardWidget", u"Shutter open", None))
+        self.Laser2On_CheckBox.setText(QCoreApplication.translate("DashboardWidget", u"Laser On", None))
+        self.label_Laser2Power.setText(QCoreApplication.translate("DashboardWidget", u"Laser 2 Power", None))
+        self.Laser2Power_DoubleSpinBox.setSuffix("")
     # retranslateUi
 

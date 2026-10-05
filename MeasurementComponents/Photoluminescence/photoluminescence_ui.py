@@ -222,6 +222,11 @@ class Ui_PhotoluminescenceWidget(object):
 
         self.gridLayout_4.addWidget(self.label_5, 3, 0, 1, 1)
 
+        self.BSPowerMajor_CheckBox = QCheckBox(self.widget_5)
+        self.BSPowerMajor_CheckBox.setObjectName(u"BSPowerMajor_CheckBox")
+
+        self.gridLayout_4.addWidget(self.BSPowerMajor_CheckBox, 4, 0, 1, 2)
+
 
         self.horizontalLayout_2.addWidget(self.widget_5)
 
@@ -250,28 +255,6 @@ class Ui_PhotoluminescenceWidget(object):
         self.Directory_LineEdit.setObjectName(u"Directory_LineEdit")
 
         self.gridLayout_2.addWidget(self.Directory_LineEdit, 0, 1, 1, 1)
-
-        self.PxlCorrection_checkBox = QCheckBox(self.widget_2)
-        self.PxlCorrection_checkBox.setObjectName(u"PxlCorrection_checkBox")
-
-        self.gridLayout_2.addWidget(self.PxlCorrection_checkBox, 2, 1, 1, 1)
-
-        self.ShowReference_CheckBox = QCheckBox(self.widget_2)
-        self.ShowReference_CheckBox.setObjectName(u"ShowReference_CheckBox")
-
-        self.gridLayout_2.addWidget(self.ShowReference_CheckBox, 3, 0, 1, 1)
-
-        self.SelectReference_PushButton = QPushButton(self.widget_2)
-        self.SelectReference_PushButton.setObjectName(u"SelectReference_PushButton")
-
-        self.gridLayout_2.addWidget(self.SelectReference_PushButton, 3, 1, 1, 1)
-
-        self.ReferenceFiles_Label = QLabel(self.widget_2)
-        self.ReferenceFiles_Label.setObjectName(u"ReferenceFiles_Label")
-        self.ReferenceFiles_Label.setWordWrap(True)
-
-        self.gridLayout_2.addWidget(self.ReferenceFiles_Label, 4, 0, 1, 2)
-
 
         self.horizontalLayout_2.addWidget(self.widget_2)
 
@@ -310,12 +293,9 @@ class Ui_PhotoluminescenceWidget(object):
         self.BandwidthSweepEnable_CheckBox.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Bandwidth Seep Enable", None))
         self.label_3.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Min. Energy", None))
         self.label_5.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Overlap", None))
+        self.BSPowerMajor_CheckBox.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Sweep Power-First (all windows per power step)", None))
         self.label_2.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Filename", None))
         self.label.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Directory", None))
-        self.PxlCorrection_checkBox.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Apply Pixel Correction (preliminary!)", None))
-        self.ShowReference_CheckBox.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Show Reference Spectra", None))
-        self.SelectReference_PushButton.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"Select Reference Files...", None))
-        self.ReferenceFiles_Label.setText(QCoreApplication.translate("PhotoluminescenceWidget", u"No reference files selected", None))
 
     # retranslateUi
 

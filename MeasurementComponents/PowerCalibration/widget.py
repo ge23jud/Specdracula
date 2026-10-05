@@ -18,6 +18,8 @@ class PowerCalibrationView(TurboComponentView, Ui_PowerCalibrationWidget):
         SFT.connect_widget_to_param(self.PsStart_DoubleSpinBox, component.ps_start)
         SFT.connect_widget_to_param(self.PsStop_DoubleSpinBox, component.ps_stop)
         SFT.connect_widget_to_param(self.PsStep_DoubleSpinBox, component.ps_step)
+        SFT.connect_widget_to_param(self.SettleTime_DoubleSpinBox, component.settle_time)
+        SFT.connect_widget_to_param(self.AveragingTime_DoubleSpinBox, component.averaging_time)
         SFT.connect_widget_to_param(self.Directory_LineEdit, component.save_directory)
         SFT.connect_widget_to_param(self.Filename_LineEdit, component.save_filename)
         SFT.connect_widget_to_param(self.StartPS_PushButton, component.run_ActionParam)

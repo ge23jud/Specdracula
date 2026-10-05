@@ -3,6 +3,7 @@ import ScopeFoundry as SFT
 import pyqtgraph as pg
 import numpy as np
 import os
+import time
 from ScopeFoundry import TurboComponentView, connect_widget_to_param
 from .photoluminescence_ui import Ui_PhotoluminescenceWidget
 from helperfunctions import HelperFunctions
@@ -41,6 +42,18 @@ def _scheme_color(t, scheme_name):
     b = int(b0 + f * (b1 - b0))
     return f'#{r:02x}{g:02x}{b:02x}'
 
+
+def _format_duration(seconds):
+    """Format a duration in seconds as a short human-readable string, e.g. '2m 15s'."""
+    seconds = int(round(seconds))
+    hours, remainder = divmod(seconds, 3600)
+    minutes, secs = divmod(remainder, 60)
+    if hours > 0:
+        return f"{hours}h {minutes}m"
+    if minutes > 0:
+        return f"{minutes}m {secs}s"
+    return f"{secs}s"
+
 class _SettingsDialog(QtWidgets.QDialog):
     """Secondary settings panel (log steps, measurement count, plot display),
     kept out of the main view so the standard interface stays uncluttered."""
@@ -65,6 +78,22 @@ class _SettingsDialog(QtWidgets.QDialog):
         self.PowerCalFile_Label = QtWidgets.QLabel("No power calibration file selected")
         self.PowerCalFile_Label.setWordWrap(True)
         left.addWidget(self.PowerCalFile_Label)
+
+        ref_row = QtWidgets.QHBoxLayout()
+        self.ShowReference_CheckBox = QtWidgets.QCheckBox("Show Reference Spectra")
+        ref_row.addWidget(self.ShowReference_CheckBox)
+        self.SubtractReference_CheckBox = QtWidgets.QCheckBox("Subtract Reference Spectra")
+        ref_row.addWidget(self.SubtractReference_CheckBox)
+        left.addLayout(ref_row)
+
+        select_ref_row = QtWidgets.QHBoxLayout()
+        self.SelectReference_PushButton = QtWidgets.QPushButton("Select Reference Files...")
+        select_ref_row.addWidget(self.SelectReference_PushButton)
+        left.addLayout(select_ref_row)
+
+        self.ReferenceFiles_Label = QtWidgets.QLabel("No reference files selected")
+        self.ReferenceFiles_Label.setWordWrap(True)
+        left.addWidget(self.ReferenceFiles_Label)
         left.addStretch()
 
         right = QtWidgets.QFormLayout()
@@ -104,6 +133,10 @@ class PhotoluminescenceView(TurboComponentView, Ui_PhotoluminescenceWidget):
         self.LogSteps_CheckBox = self._settings_dialog.LogSteps_CheckBox
         self.SelectPowerCal_PushButton = self._settings_dialog.SelectPowerCal_PushButton
         self.PowerCalFile_Label = self._settings_dialog.PowerCalFile_Label
+        self.ShowReference_CheckBox = self._settings_dialog.ShowReference_CheckBox
+        self.SubtractReference_CheckBox = self._settings_dialog.SubtractReference_CheckBox
+        self.SelectReference_PushButton = self._settings_dialog.SelectReference_PushButton
+        self.ReferenceFiles_Label = self._settings_dialog.ReferenceFiles_Label
         self.NumMeasurements_SpinBox = self._settings_dialog.NumMeasurements_SpinBox
         self.yscale_ComboBox = self._settings_dialog.yscale_ComboBox
         self.xlabel_ComboBox = self._settings_dialog.xlabel_ComboBox
@@ -123,24 +156,27 @@ class PhotoluminescenceView(TurboComponentView, Ui_PhotoluminescenceWidget):
         SFT.connect_widget_to_param(self.SavePL_PushButton, component.save_single_ActionParam)
         SFT.connect_widget_to_param(self.StartLivePL_PushButton, component.continuous_ActionParam)
         SFT.connect_widget_to_param(self.StopLivePL_PushButton, component.interrupt_ActionParam)
-        SFT.connect_widget_to_param(self.StartPS_PushButton, component.powerseries_ActionParam)
-        SFT.connect_widget_to_param(self.PxlCorrection_checkBox, component.pixel_correction_enabled)
+        SFT.connect_widget_to_param(self.StopPS_PushButton, component.interrupt_ActionParam)
         SFT.connect_widget_to_param(self.ColorScheme_ComboBox, component.colorscheme)
         SFT.connect_widget_to_param(self.BandwidthSweepEnable_CheckBox, component.bs_enable)
         SFT.connect_widget_to_param(self.MinEnergy_DoubleSpinBox, component.bs_min_energy)
         SFT.connect_widget_to_param(self.MaxEnergy_DoubleSpinBox, component.bs_max_energy)
         SFT.connect_widget_to_param(self.Overlap_DoubleSpinBox, component.bs_overlap)
+        SFT.connect_widget_to_param(self.BSPowerMajor_CheckBox, component.bs_power_major)
 
         self.SelectReference_PushButton.clicked.connect(self._on_select_reference_files)
         self.ShowReference_CheckBox.toggled.connect(self._on_reference_toggled)
+        self.SubtractReference_CheckBox.toggled.connect(self._on_subtract_reference_toggled)
         self.SelectPowerCal_PushButton.clicked.connect(self._on_select_powercal_file)
         self.Settings_PushButton.clicked.connect(self._on_open_settings)
+        self.StartPS_PushButton.clicked.connect(self._on_start_powerseries_clicked)
 
         component.x_label.sigValueChanged.connect(self._on_xlabel_changed)
         component.intensity_counts.sigValueChanged.connect(self._update_plot_single)
         component.intensity_counts_powerseries.sigValueChanged.connect(self._update_plot_powerseries)
         component.stitch_edge_nm.sigValueChanged.connect(self._on_stitch_edge)
         component.measurement_running.sigValueChanged.connect(self._on_measurement_running_changed)
+        component.completed_measurement_steps.sigValueChanged.connect(self._on_progress_changed)
         component.powerseries_ActionParam.sigActivated.connect(self._clear_plot)
         component.single_ActionParam.sigActivated.connect(self._clear_plot)
         component.continuous_ActionParam.sigActivated.connect(self._clear_plot)
@@ -150,7 +186,15 @@ class PhotoluminescenceView(TurboComponentView, Ui_PhotoluminescenceWidget):
 
         self._reference_files = []    # paths of previously saved measurements to overlay
         self._reference_curves = []   # PlotDataItems currently shown for those files
+        self._reference_spectra_cache = []  # [(wavelength_nm, intensity), …] parsed from _reference_files
         self._live_curve_count = 1    # tracks live (non-reference) curves; 1 for the placeholder from setup_plot
+        self._legend_power_indices_shown = set()  # power indices already given a legend entry
+
+        self._run_start_time = None       # time.time() when the current run started
+        self._eta_seconds_remaining = None  # None until the first step completes
+        self._eta_timer = QtCore.QTimer(self)
+        self._eta_timer.setInterval(1000)
+        self._eta_timer.timeout.connect(self._tick_eta)
 
 
     def setup_plot(self):
@@ -180,13 +224,45 @@ class PhotoluminescenceView(TurboComponentView, Ui_PhotoluminescenceWidget):
     @QtCore.Slot()
     def _on_measurement_running_changed(self):
         if self.component.measurement_running.value():
+            self._run_start_time = time.time()
+            self._eta_seconds_remaining = None
+            self._eta_timer.start()
             self.Status_Label.setText("Running...")
             self.Status_Label.setStyleSheet(
                 "color: orange; font-size: 8pt; font-weight: bold; padding-right: 4px;")
-        elif self.Status_Label.text() == "Running...":
+        elif self.Status_Label.text().startswith("Running"):
+            self._eta_timer.stop()
+            self._run_start_time = None
+            self._eta_seconds_remaining = None
             self.Status_Label.setText("Finished")
             self.Status_Label.setStyleSheet(
                 "color: #00dd00; font-size: 8pt; font-weight: bold; padding-right: 4px;")
+
+    @QtCore.Slot()
+    def _on_progress_changed(self):
+        if self._run_start_time is None:
+            return
+        completed = self.component.completed_measurement_steps.value()
+        total = self.component.total_measurement_steps.value()
+        if completed <= 0 or total <= completed:
+            return
+        elapsed = time.time() - self._run_start_time
+        seconds_per_step = elapsed / completed
+        self._eta_seconds_remaining = seconds_per_step * (total - completed)
+        self._update_status_label_eta()
+
+    @QtCore.Slot()
+    def _tick_eta(self):
+        if self._eta_seconds_remaining is None:
+            return
+        self._eta_seconds_remaining = max(0.0, self._eta_seconds_remaining - 1.0)
+        self._update_status_label_eta()
+
+    def _update_status_label_eta(self):
+        if self._eta_seconds_remaining is None:
+            self.Status_Label.setText("Running...")
+        else:
+            self.Status_Label.setText(f"Running... (~{_format_duration(self._eta_seconds_remaining)} left)")
 
     @QtCore.Slot()
     def _on_stitch_edge(self):
@@ -225,6 +301,7 @@ class PhotoluminescenceView(TurboComponentView, Ui_PhotoluminescenceWidget):
         elif xaxis == "Energy":
             X = self.component.energy_ev.value()
         Y = self.component.intensity_counts.value().flatten()
+        Y = self._maybe_subtract_reference(Y)
         if self._live_curve_count == 0:
             self.spectrum_plotDataItem = self.plot_widget.plot(X, Y)
             self._live_curve_count = 1
@@ -234,9 +311,12 @@ class PhotoluminescenceView(TurboComponentView, Ui_PhotoluminescenceWidget):
 
     @QtCore.Slot()
     def _update_plot_powerseries(self):
+        # current_power_index is authoritative (set directly by the module) rather
+        # than inferred from a curve counter, since in bandwidth-sweep power-major
+        # order several curves (one per energy window) share the same power step
+        # in a row, breaking any "count modulo n" inference.
         n = self.component.n_measurements.value()
-        num_items = self._live_curve_count
-        i = num_items % max(n, 1)
+        i = self.component.current_power_index.value()
         t = i / max(n - 1, 1)
         color = _scheme_color(t, self.component.colorscheme.value())
         current_angles = self.component.current_angles.value()
@@ -252,11 +332,13 @@ class PhotoluminescenceView(TurboComponentView, Ui_PhotoluminescenceWidget):
             X = self.component.energy_ev.value()
 
         Y = self.component.intensity_counts_powerseries.value().flatten()
+        Y = self._maybe_subtract_reference(Y)
         self.spectrum_plotDataItem = self.plot_widget.plot(X, Y, pen=color)
         self.spectrum_plotDataItem.setZValue(i)
 
-        if num_items < n:
+        if i not in self._legend_power_indices_shown:
             self.legend.addItem(self.spectrum_plotDataItem, name=f"{angle:.1f}°")
+            self._legend_power_indices_shown.add(i)
         self._live_curve_count += 1
 
 
@@ -268,6 +350,7 @@ class PhotoluminescenceView(TurboComponentView, Ui_PhotoluminescenceWidget):
         self._stitch_lines.clear()
         self._reference_curves.clear()
         self._live_curve_count = 0
+        self._legend_power_indices_shown.clear()
         if self.ShowReference_CheckBox.isChecked():
             self._replot_references()
 
@@ -281,12 +364,18 @@ class PhotoluminescenceView(TurboComponentView, Ui_PhotoluminescenceWidget):
         if not paths:
             return
         self._reference_files = paths
+        self._reference_spectra_cache = [
+            spectrum for spectrum in (self._load_reference_spectrum(p) for p in paths)
+            if spectrum[0] is not None
+        ]
         names = ", ".join(os.path.basename(p) for p in paths)
         if len(names) > 60:
             names = f"{len(paths)} files selected"
         self.ReferenceFiles_Label.setText(names)
         if self.ShowReference_CheckBox.isChecked():
             self._replot_references()
+        if self.SubtractReference_CheckBox.isChecked():
+            self._update_plot_single()
 
 
     @QtCore.Slot()
@@ -302,6 +391,19 @@ class PhotoluminescenceView(TurboComponentView, Ui_PhotoluminescenceWidget):
 
 
     @QtCore.Slot()
+    def _on_start_powerseries_clicked(self):
+        if not self.component.is_shutter_open():
+            reply = QtWidgets.QMessageBox.question(
+                self, "Shutter closed", "Shutter closed. Continue?",
+                QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No,
+                QtWidgets.QMessageBox.StandardButton.No,
+            )
+            if reply != QtWidgets.QMessageBox.StandardButton.Yes:
+                return
+        self.component.powerseries_ActionParam.activate()
+
+
+    @QtCore.Slot()
     def _on_open_settings(self):
         self._settings_dialog.show()
         self._settings_dialog.raise_()
@@ -314,6 +416,34 @@ class PhotoluminescenceView(TurboComponentView, Ui_PhotoluminescenceWidget):
             self._replot_references()
         else:
             self._remove_reference_curves()
+
+
+    @QtCore.Slot(bool)
+    def _on_subtract_reference_toggled(self, checked):
+        # Re-render the currently displayed single spectrum immediately so toggling
+        # is visible without waiting for a new acquisition. Only affects the live
+        # display -- it never touches the saved/raw data.
+        if self.component.intensity_counts.value() is not None:
+            self._update_plot_single()
+
+
+    def _maybe_subtract_reference(self, Y):
+        """Subtract the (averaged) reference spectrum from Y for display only.
+
+        Interpolated onto the current spectrum's own wavelength axis, since Y is
+        always indexed by wavelength/pixel regardless of which axis is displayed.
+        Never modifies saved data -- callers only use the returned value for plotting.
+        """
+        if not self.SubtractReference_CheckBox.isChecked() or not self._reference_spectra_cache:
+            return Y
+        wavelength_nm = self.component.wavelength_nm.value()
+        if wavelength_nm is None:
+            return Y
+        reference_curves = [
+            np.interp(wavelength_nm, ref_wl, ref_intensity)
+            for ref_wl, ref_intensity in self._reference_spectra_cache
+        ]
+        return Y - np.mean(reference_curves, axis=0)
 
 
     def _replot_references(self):

@@ -102,16 +102,6 @@
             </property>
            </widget>
           </item>
-          <item row="7" column="1">
-           <widget class="QComboBox" name="OutputMirror_ComboBox"/>
-          </item>
-          <item row="7" column="0">
-           <widget class="QLabel" name="label_7">
-            <property name="text">
-             <string>Output Mirror</string>
-            </property>
-           </widget>
-          </item>
           <item row="1" column="0">
            <widget class="QLabel" name="label_18">
             <property name="text">
@@ -148,13 +138,6 @@
            <widget class="QDoubleSpinBox" name="DirectInputSlit_DoubleSpinBox">
             <property name="buttonSymbols">
              <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="0">
-           <widget class="QLabel" name="label_5">
-            <property name="text">
-             <string>Input Mirror</string>
             </property>
            </widget>
           </item>
@@ -220,32 +203,6 @@
             </property>
            </widget>
           </item>
-          <item row="8" column="0">
-           <widget class="QLabel" name="label_20">
-            <property name="text">
-             <string>Grating</string>
-            </property>
-           </widget>
-          </item>
-          <item row="8" column="1">
-           <widget class="QComboBox" name="Grating_ComboBox">
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>25</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>16777215</width>
-              <height>25</height>
-             </size>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="1">
-           <widget class="QComboBox" name="InputMirror_ComboBox"/>
-          </item>
          </layout>
         </widget>
        </item>
@@ -273,25 +230,6 @@
           <property name="sizeConstraint">
            <enum>QLayout::SizeConstraint::SetDefaultConstraint</enum>
           </property>
-          <item row="2" column="1">
-           <widget class="QLabel" name="DetectorTemperature_Label">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>25</height>
-             </size>
-            </property>
-            <property name="text">
-             <string>TextLabel</string>
-            </property>
-           </widget>
-          </item>
           <item row="1" column="1">
            <widget class="QDoubleSpinBox" name="IntegrationTime_DoubleSpinBox">
             <property name="sizePolicy">
@@ -321,13 +259,6 @@
            <widget class="QLabel" name="label">
             <property name="text">
              <string>Integration Time</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="label_4">
-            <property name="text">
-             <string>Temperature</string>
             </property>
            </widget>
           </item>
@@ -562,6 +493,33 @@
           <property name="verticalSpacing">
            <number>6</number>
           </property>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_ActiveLaser">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>30</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Active Laser</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="ActiveLaser_ComboBox">
+            <item>
+             <property name="text">
+              <string>Laser 1 (HWP)</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Laser 2 (KLS)</string>
+             </property>
+            </item>
+           </widget>
+          </item>
           <item row="3" column="0">
            <widget class="QLabel" name="label_11">
             <property name="minimumSize">
@@ -594,6 +552,51 @@
             </property>
            </widget>
           </item>
+          <item row="4" column="0" colspan="2">
+           <widget class="QCheckBox" name="Laser2On_CheckBox">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>25</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Laser On</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QLabel" name="label_Laser2Power">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>30</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Laser 2 Power</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="1">
+           <widget class="QDoubleSpinBox" name="Laser2Power_DoubleSpinBox">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>25</height>
+             </size>
+            </property>
+            <property name="focusPolicy">
+             <enum>Qt::FocusPolicy::StrongFocus</enum>
+            </property>
+            <property name="buttonSymbols">
+             <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+            </property>
+            <property name="suffix">
+             <string/>
+            </property>
+           </widget>
+          </item>
           <item row="2" column="0" colspan="2">
            <widget class="QCheckBox" name="Shutter_CheckBox">
             <property name="minimumSize">
@@ -603,7 +606,7 @@
              </size>
             </property>
             <property name="text">
-             <string>Excitation Shutter</string>
+             <string>Shutter open</string>
             </property>
            </widget>
           </item>

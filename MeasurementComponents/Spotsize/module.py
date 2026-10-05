@@ -21,6 +21,8 @@ class SpotsizeModule(Module):
     stop = SFT.ObjectParameter("Stop Position", dtype=float, value=45.0, range=SFT.MinMaxRangeType(min=0.0, max=360.0), unit="m")
     step = SFT.ObjectParameter("Step Size", dtype=float, value=1.0, range=SFT.MinMaxRangeType(min=0.01, max=360.0, decimals=4), unit="m")
     axis = SFT.ObjectParameter("Axis", dtype=str, value="x", range=SFT.ChoiceRangeType(**{"x": 0, "y": 1}))
+    settle_time = SFT.ObjectParameter("Settle Time", dtype=float, value=0.5, unit="s", range=SFT.MinMaxRangeType(min=0.0, max=60.0, decimals=2))
+    averaging_time = SFT.ObjectParameter("Averaging Time", dtype=float, value=0.0, unit="s", range=SFT.MinMaxRangeType(min=0.0, max=60.0, decimals=2))
     n_measurements = SFT.ObjectParameter("N Measurements", dtype=int, value=0, readonly=True)
     positions_buffer = SFT.ObjectParameter("Positions", dtype=np.ndarray, unit="m", value=np.array([]), readonly=True)
     powers_buffer = SFT.ObjectParameter("Powers", dtype=np.ndarray, unit="W", value=np.array([]), readonly=True)
@@ -80,10 +82,11 @@ class SpotsizeModule(Module):
                 if self._interrupted:
                     break
                 piezo.set_position(axis, pos)
-                sleep(0.5)
+                sleep(self.settle_time.value())
                 x = piezo.get_single_position(axis)
-                pm.reading.trigger_read().wait(2.0)
-                p = pm.reading.value()
+                p = HelperFunctions().read_averaged_power(
+                    pm, self.averaging_time.value(), is_interrupted=lambda: self._interrupted
+                )
                 pos_list.append(x)
                 pow_list.append(p)
                 self.positions_buffer.setValue(np.array(pos_list))
