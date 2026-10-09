@@ -1,1 +1,2 @@
 from .thorlabs_KDC101_PRMTZ8 import ThorlabsKDC101_PRMTZ8
+from .thorlabs_K10CR1 import ThorlabsK10CR1

@@ -14,7 +14,7 @@ from PySide6 import QtWidgets, QtCore
 # Hardware components
 from HardwareComponents.thorlabs_powermeter import ThorlabsPowerMeterHW
 from HardwareComponents.arduino_shutter import ArduinoShutterHW
-from HardwareComponents.thorlabs_motors import ThorlabsKDC101_PRMTZ8
+from HardwareComponents.thorlabs_motors import ThorlabsKDC101_PRMTZ8, ThorlabsK10CR1
 from HardwareComponents.piezo_jena_NV403CLE import PiezoJenaNV40_HW
 from HardwareComponents.andor_camera import AndorCCDHW
 from HardwareComponents.andor_spec import AndorSpectrographHW
@@ -85,6 +85,12 @@ class SpecDracula(SFT.TurboControl):
         _temp = hwp_motor.find_param_by_name('Serial number')
         set_initial(_temp, '27253212')  # KDC101 serial number
         hwp_motor.connect()
+
+        # K10CR1 rotation stage setup
+        rotation_stage = ThorlabsK10CR1(name='K10CR1 Rotation Stage')
+        _temp = rotation_stage.find_param_by_name('Serial number')
+        set_initial(_temp, '55414414')  # K10CR1 serial number
+        #rotation_stage.connect()
 
         # Laser 2 setup (Thorlabs KLS635 K-Cube Laser Source)
         laser2 = ThorlabsKLSLaserHW(name='Laser 2 (KLS635)')
