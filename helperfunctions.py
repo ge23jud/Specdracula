@@ -244,6 +244,88 @@ class HelperFunctions():
             fh.write("\n".join(lines) + "\n")
 
 
+    def write_fourier_powerseries_origin(
+        self,
+        date: dt.datetime,
+        temperature: float,
+        integration_time: float,
+        excitation_power: np.ndarray,
+        angles: np.ndarray,
+        pixel_arrays: list,
+        filepath: str,
+    ) -> None:
+        """
+        Write a power-series Fourier-imaging dataset to a .origin text file.
+
+        Unlike `write_origin`, each power step contributes a full 2D pixel
+        array (CMOS frame) rather than a single spectrum column, so the data
+        block stores one image block per power step instead of one shared
+        wavelength-indexed matrix. A "# Image" marker line precedes each
+        block so the images can be split apart again when reading the file.
+
+        Parameters
+        ----------
+        date : datetime
+            Timestamp of the measurement.
+        temperature : float
+            Sample temperature in Kelvin.
+        integration_time : float
+            CMOS exposure time in seconds.
+        excitation_power : np.ndarray, shape (m,)
+            Powermeter reading for each power step, in Watts.
+        angles : np.ndarray, shape (m,)
+            Power HWP position for each power step, in degrees.
+        pixel_arrays : list of np.ndarray, length m
+            2D CMOS pixel array (height x width) for each power step.
+        filepath : str
+            Destination path for the .origin file.
+        """
+        excitation_power = np.asarray(excitation_power)
+        angles = np.asarray(angles)
+        m = excitation_power.shape[0]
+
+        if len(pixel_arrays) != m or angles.shape[0] != m:
+            raise ValueError(
+                f"excitation_power, angles and pixel_arrays must all have length {m}, "
+                f"got angles={angles.shape[0]}, pixel_arrays={len(pixel_arrays)}"
+            )
+
+        date_str = (
+            f"{date.strftime('%A, %B')} {date.day}, {date.year}, "
+            f"{date.hour % 12 or 12}:{date.strftime('%M')} "
+            f"{'AM' if date.hour < 12 else 'PM'}"
+        )
+
+        exc_power_vals = "\t".join(f"{v:g}" for v in excitation_power)
+        angle_vals = "\t".join(f"{a:g}" for a in angles)
+
+        lines: list[str] = []
+
+        # -- metadata header ---------------------------------------------------
+        lines.append(f"Date:\t{date_str}")
+        lines.append(f"Measurement type:\tPowerseries_Fourier")
+        lines.append(f"Temperature: \t{temperature:.3f} K")
+        lines.append(f"Integration time:\t{integration_time:.3f} s")
+        lines.append(" ")  # blank separator row
+
+        # -- power / angle axes --------------------------------------------------
+        lines.append(f"Excitation power (W)\t{exc_power_vals}")
+        lines.append(f"Power HWP Position (°)\t{angle_vals}")
+        lines.append(" ")  # blank separator row
+
+        # -- one 2D pixel block per power step, each preceded by a marker line --
+        for i, frame in enumerate(pixel_arrays):
+            frame = np.asarray(frame)
+            lines.append(f"# Image {i}\tPower HWP Position (°)\t{angles[i]:g}\tExcitation power (W)\t{excitation_power[i]:g}")
+            for row in frame:
+                lines.append("\t".join(str(int(round(v))) for v in row))
+            lines.append(" ")  # separator row before the next image
+
+        # -- write with CRLF line endings --------------------------------------
+        with open(filepath, "w", newline="\r\n", encoding="latin-1") as fh:
+            fh.write("\n".join(lines) + "\n")
+
+
     def write_powercal_origin(
         self,
         date: dt.datetime,

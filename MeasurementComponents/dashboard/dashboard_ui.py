@@ -163,6 +163,55 @@ class Ui_DashboardWidget(object):
 
         self.verticalLayout_2.addWidget(self.groupBox_4)
 
+        self.groupBox_7 = QGroupBox(self.scrollAreaWidgetContents)
+        self.groupBox_7.setObjectName(u"groupBox_7")
+        sizePolicy2.setHeightForWidth(self.groupBox_7.sizePolicy().hasHeightForWidth())
+        self.groupBox_7.setSizePolicy(sizePolicy2)
+        self.groupBox_7.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
+        self.groupBox_7.setFlat(False)
+        self.groupBox_7.setCheckable(False)
+        self.gridLayout_5 = QGridLayout(self.groupBox_7)
+        self.gridLayout_5.setObjectName(u"gridLayout_5")
+        self.gridLayout_5.setSizeConstraint(QLayout.SizeConstraint.SetDefaultConstraint)
+
+        self.verticalSpacer_5 = QSpacerItem(20, 15, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
+
+        self.gridLayout_5.addItem(self.verticalSpacer_5, 0, 0, 1, 2)
+
+        self.label_CmosExposure = QLabel(self.groupBox_7)
+        self.label_CmosExposure.setObjectName(u"label_CmosExposure")
+
+        self.gridLayout_5.addWidget(self.label_CmosExposure, 1, 0, 1, 1)
+
+        self.CmosExposureTime_DoubleSpinBox = QDoubleSpinBox(self.groupBox_7)
+        self.CmosExposureTime_DoubleSpinBox.setObjectName(u"CmosExposureTime_DoubleSpinBox")
+        sizePolicy4.setHeightForWidth(self.CmosExposureTime_DoubleSpinBox.sizePolicy().hasHeightForWidth())
+        self.CmosExposureTime_DoubleSpinBox.setSizePolicy(sizePolicy4)
+        self.CmosExposureTime_DoubleSpinBox.setMinimumSize(QSize(0, 25))
+        self.CmosExposureTime_DoubleSpinBox.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self.CmosExposureTime_DoubleSpinBox.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
+
+        self.gridLayout_5.addWidget(self.CmosExposureTime_DoubleSpinBox, 1, 1, 1, 1)
+
+        self.label_CmosGain = QLabel(self.groupBox_7)
+        self.label_CmosGain.setObjectName(u"label_CmosGain")
+
+        self.gridLayout_5.addWidget(self.label_CmosGain, 2, 0, 1, 1)
+
+        self.CmosGain_DoubleSpinBox = QDoubleSpinBox(self.groupBox_7)
+        self.CmosGain_DoubleSpinBox.setObjectName(u"CmosGain_DoubleSpinBox")
+        sizePolicy4.setHeightForWidth(self.CmosGain_DoubleSpinBox.sizePolicy().hasHeightForWidth())
+        self.CmosGain_DoubleSpinBox.setSizePolicy(sizePolicy4)
+        self.CmosGain_DoubleSpinBox.setMinimumSize(QSize(0, 25))
+        self.CmosGain_DoubleSpinBox.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self.CmosGain_DoubleSpinBox.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
+
+        self.gridLayout_5.addWidget(self.CmosGain_DoubleSpinBox, 2, 1, 1, 1)
+
+        self.gridLayout_5.setColumnStretch(1, 1)
+
+        self.verticalLayout_2.addWidget(self.groupBox_7)
+
         self.groupBox_3 = QGroupBox(self.scrollAreaWidgetContents)
         self.groupBox_3.setObjectName(u"groupBox_3")
         sizePolicy2.setHeightForWidth(self.groupBox_3.sizePolicy().hasHeightForWidth())
@@ -353,6 +402,11 @@ class Ui_DashboardWidget(object):
         self.groupBox_4.setTitle(QCoreApplication.translate("DashboardWidget", u"Detector", None))
         self.IntegrationTime_DoubleSpinBox.setSuffix("")
         self.label.setText(QCoreApplication.translate("DashboardWidget", u"Integration Time", None))
+        self.groupBox_7.setTitle(QCoreApplication.translate("DashboardWidget", u"Fourier CMOS", None))
+        self.CmosExposureTime_DoubleSpinBox.setSuffix("")
+        self.label_CmosExposure.setText(QCoreApplication.translate("DashboardWidget", u"Exposure Time", None))
+        self.CmosGain_DoubleSpinBox.setSuffix("")
+        self.label_CmosGain.setText(QCoreApplication.translate("DashboardWidget", u"Gain", None))
         self.groupBox_3.setTitle(QCoreApplication.translate("DashboardWidget", u"Piezo", None))
         self.label_6.setText(QCoreApplication.translate("DashboardWidget", u"Step", None))
         self.label_2.setText(QCoreApplication.translate("DashboardWidget", u"X-Position", None))

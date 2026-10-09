@@ -1,0 +1,132 @@
+Task: Parse "Powerseries_Fourier" .origin files into power/angle arrays + per-step pixel images
+
+Background
+----------
+Specdracula's "Fourier Imaging" measurement component writes power-series CMOS data to a
+tab-delimited .origin text file. Unlike the regular photoluminescence .origin format (which
+stores one shared wavelength axis + an intensity matrix), this format stores one full 2D CMOS
+frame (image) per power/HWP step.
+
+The writer is HelperFunctions.write_fourier_powerseries_origin in
+C:\WSI\specdracula\helperfunctions.py. Read that function if you want to cross-check the exact
+format, but the spec below is complete and should be sufficient on its own.
+
+File-level facts
+-----------------
+- Encoding: latin-1 (not UTF-8 -- the degree sign is written as the single byte 0xB0).
+- Line endings: \r\n (CRLF).
+- Delimiter within a line: tab (\t).
+- Open it as open(path, encoding="latin-1") and iterate lines normally -- Python's
+  universal-newlines handling takes care of the \r\n.
+
+Structure, in order
+--------------------
+1) Header (4 lines), each "key\tvalue":
+   Date:\t<human-readable timestamp>
+   Measurement type:\tPowerseries_Fourier
+   Temperature: \t<temperature> K
+   Integration time:\t<exposure time> s
+
+   "Integration time" is the CMOS exposure time in seconds (not a spectrograph value).
+
+2) Blank separator line -- a line that is just a single space (" "); after .strip() it is empty.
+
+3) Power/angle axes (2 lines), each "label\tval0\tval1\t...\tval{m-1}" where m is the number of
+   power steps:
+   Excitation power (W)\t<p0>\t<p1>\t...\t<p_{m-1}>
+   Power HWP Position (deg)\t<a0>\t<a1>\t...\t<a_{m-1}>
+
+   Powers are in Watts, as read from the powermeter. Angles are HWP degrees. These two rows are
+   positionally aligned -- index i in both rows belongs to the same power step / same image.
+
+4) Blank separator line (same as step 2).
+
+5) One block per power step i (0-indexed, in file order), repeated m times:
+   - A marker line starting with "# Image":
+     # Image <i>\tPower HWP Position (deg)\t<a_i>\tExcitation power (W)\t<p_i>
+     This line is the unambiguous "a new image starts here" signal -- no data row ever starts
+     with "#".
+   - Followed immediately by the image's pixel rows: each row is one CMOS row, written as
+     tab-separated integers (str(int(round(value))) per pixel), one text line per row. The
+     number of rows/columns is NOT stated anywhere in the file -- you must infer the image
+     shape from how many consecutive numeric rows appear before the next separator/marker/EOF,
+     and the column count from len(line.split('\t')) on those rows.
+   - Followed by a blank separator line (same as step 2) -- except possibly at true
+     end-of-file, where it may or may not be present depending on trailing-newline handling.
+
+Reference parser (Python)
+--------------------------
+import numpy as np
+
+def read_fourier_powerseries_origin(filepath):
+    """Returns (temperature_K, integration_time_s, excitation_power_W, angles_deg, images)
+    where excitation_power_W and angles_deg are 1D numpy arrays of length m,
+    and images is a list of m 2D numpy arrays (one CMOS frame per power step),
+    in the same order as excitation_power_W / angles_deg.
+    """
+    with open(filepath, encoding="latin-1") as fh:
+        lines = [line.rstrip("\r\n") for line in fh]
+
+    # --- header ---
+    def header_value(line):
+        return line.split("\t", 1)[1]
+
+    temperature = float(header_value(lines[2]).split()[0])          # "295.000 K" -> 295.000
+    integration_time = float(header_value(lines[3]).split()[0])     # "0.050 s" -> 0.050
+
+    # --- axes ---
+    idx = 4
+    while lines[idx].strip() == "":
+        idx += 1
+    power_parts = lines[idx].split("\t")
+    assert power_parts[0].startswith("Excitation power")
+    excitation_power = np.array([float(v) for v in power_parts[1:]])
+    idx += 1
+
+    angle_parts = lines[idx].split("\t")
+    assert angle_parts[0].startswith("Power HWP Position")
+    angles = np.array([float(v) for v in angle_parts[1:]])
+    idx += 1
+
+    m = len(excitation_power)
+
+    # --- image blocks ---
+    images = []
+    i = idx
+    n_lines = len(lines)
+    while i < n_lines:
+        line = lines[i]
+        if line.strip() == "":
+            i += 1
+            continue
+        if line.startswith("# Image"):
+            i += 1
+            rows = []
+            while i < n_lines and lines[i].strip() != "" and not lines[i].startswith("# Image"):
+                rows.append([int(v) for v in lines[i].split("\t")])
+                i += 1
+            images.append(np.array(rows, dtype=np.int64))
+            continue
+        i += 1  # defensive skip of anything unexpected
+
+    assert len(images) == m, f"expected {m} images, found {len(images)}"
+
+    return temperature, integration_time, excitation_power, angles, images
+
+Notes / gotchas for whoever implements this
+--------------------------------------------
+- Do not assume a fixed image height/width -- the CMOS is 1440x1080 by default (Thorlabs Zelux
+  CS165), but don't hardcode it; infer from the parsed rows so the parser keeps working if the
+  camera's ROI changes.
+- images[i] corresponds to excitation_power[i] and angles[i] -- they are positionally aligned
+  by construction, and the "# Image i" marker line redundantly repeats both values so you can
+  cross-check/assert if paranoid.
+- If a run was interrupted mid-sweep, the writer only ever writes the power steps it actually
+  completed -- m (and the number of image blocks) reflects the completed steps, not
+  ps_start/ps_stop/ps_step from the UI.
+- Pixel values are integers (rounded counts), so reconstructing as int64 (or uint16, since the
+  CS165 is a 10-bit sensor) is appropriate -- don't reconstruct as float unless you need
+  headroom for later processing.
+- This format is intentionally different from the regular photoluminescence .origin format
+  (HelperFunctions.write_origin) -- do not reuse that parser; it assumes a single shared
+  wavelength axis and one shared intensity matrix, which doesn't apply here.

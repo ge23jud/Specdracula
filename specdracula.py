@@ -19,6 +19,7 @@ from HardwareComponents.piezo_jena_NV403CLE import PiezoJenaNV40_HW
 from HardwareComponents.andor_camera import AndorCCDHW
 from HardwareComponents.andor_spec import AndorSpectrographHW
 from HardwareComponents.thorlabs_laser import ThorlabsKLSLaserHW
+from HardwareComponents.fourier_cmos import ThorlabsCS165HW
 from power_axis_adapters import HWPPowerAxisAdapter, LaserPowerAxisAdapter
 
 from MeasurementComponents.XYMeasurement import XYMeasurementModule
@@ -28,6 +29,7 @@ from MeasurementComponents.status import StatusModule, StatusView
 from MeasurementComponents.Map import MapModule
 from MeasurementComponents.Spotsize import SpotsizeModule
 from MeasurementComponents.PowerCalibration import PowerCalibrationModule
+from MeasurementComponents.FourierCMOS import FourierCMOSModule
 
 
 def set_initial(param, value):
@@ -60,6 +62,7 @@ class SpecDracula(SFT.TurboControl):
         map = MapModule(name="2D Map")
         spotsize = SpotsizeModule(name="Spotsize")
         powercalibration = PowerCalibrationModule(name="Power Calibration")
+        fourier_cmos = FourierCMOSModule(name="Fourier Imaging")
 
         # Powermeter setup
         power_meter = ThorlabsPowerMeterHW(name='PM100')
@@ -107,6 +110,18 @@ class SpecDracula(SFT.TurboControl):
         set_initial(_temp, "Spectrograph")
         spec.connect()
 
+        # Fourier-plane CMOS camera (Thorlabs Zelux CS165)
+        cmos_camera = ThorlabsCS165HW(name='FourierCMOS')
+        _temp = cmos_camera.find_param_by_name('Serial number')
+        set_initial(_temp, '')  # leave blank to open the first available camera
+        cmos_camera.connect()
+
+        fourier_cmos.camera.setValue(cmos_camera)
+        fourier_cmos.hwp.setValue(hwp_motor)
+        fourier_cmos.powermeter.setValue(power_meter)
+        fourier_cmos.status.setValue(status)
+        fourier_cmos.connect()
+
         photoluminescence.camera.setValue(ccd_camera)
         photoluminescence.spectrograph.setValue(spec)
         photoluminescence.hwp.setValue(hwp_motor)
@@ -114,6 +129,7 @@ class SpecDracula(SFT.TurboControl):
         photoluminescence.shutter.setValue(shutter)
 
         dashboard.camera.setValue(ccd_camera)
+        dashboard.fourier_camera.setValue(cmos_camera)
         dashboard.spectrograph.setValue(spec)
         dashboard.halfwaveplate.setValue(hwp_motor)
         dashboard.piezo.setValue(piezo_stage)
@@ -144,6 +160,7 @@ class SpecDracula(SFT.TurboControl):
         hwp_power_adapter = HWPPowerAxisAdapter(hwp_motor)
         photoluminescence.active_power_adapter = hwp_power_adapter
         powercalibration.active_power_adapter = hwp_power_adapter
+        fourier_cmos.active_power_adapter = hwp_power_adapter
 
         # Active-laser selector (dashboard combo box) -- reassigns the power
         # adapter (and its unit/range) on every consumer module.
@@ -152,7 +169,7 @@ class SpecDracula(SFT.TurboControl):
             "Laser 2 (KLS)": LaserPowerAxisAdapter(laser2),
         }
         _current_laser_choice = ["Laser 1 (HWP)"]
-        power_axis_consumers = (photoluminescence, powercalibration)
+        power_axis_consumers = (photoluminescence, powercalibration, fourier_cmos)
 
         def _apply_laser_choice(choice):
             adapter = laser_power_adapters[choice]

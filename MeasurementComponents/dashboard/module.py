@@ -8,6 +8,7 @@ class DashboardModule(Module):
 
     halfwaveplate = SFT.ObjectParameter("HWP", SFT.TurboComponent)
     camera = SFT.ObjectParameter('Camera', SFT.TurboComponent)
+    fourier_camera = SFT.ObjectParameter('Fourier Camera', SFT.TurboComponent)
     spectrograph = SFT.ObjectParameter('Spectrograph', SFT.TurboComponent)
     piezo = SFT.ObjectParameter('Piezo', SFT.TurboComponent)
     shutter = SFT.ObjectParameter('Shutter', SFT.TurboComponent)
@@ -17,6 +18,8 @@ class DashboardModule(Module):
 
     center_energy = SFT.PhysicalParameter("Center Energy", dtype=float, value=1.2, unit="eV")
     integration_time = SFT.PhysicalParameter("Integration Time", dtype=float, value=1., unit="s")
+    cmos_exposure_time = SFT.PhysicalParameter("CMOS Exposure Time", dtype=float, value=10., unit="ms")
+    cmos_gain = SFT.PhysicalParameter("CMOS Gain", dtype=float, value=0.)
     piezo_x = SFT.PhysicalParameter("Piezo X", dtype=float, value=0., unit="um")
     piezo_y = SFT.PhysicalParameter("Piezo Y", dtype=float, value=0., unit="um")
     piezo_step = SFT.ObjectParameter("Piezo Step", dtype=float, value=0.1, unit="um")
@@ -66,7 +69,21 @@ class DashboardModule(Module):
         self.integration_time.connect_to_hardware(
             read_func=self.get_integration_time,
             write_func=self.set_integration_time
-        ) 
+        )
+
+        self.fourier_cam = self.fourier_camera.value()
+
+        self.cmos_exposure_time.connect_to_hardware(
+            read_func=self.get_cmos_exposure_time,
+            write_func=self.set_cmos_exposure_time
+        )
+        self.cmos_exposure_time.set_range(self.fourier_cam.exposure_time.range)
+
+        self.cmos_gain.connect_to_hardware(
+            read_func=self.get_cmos_gain,
+            write_func=self.set_cmos_gain
+        )
+        self.cmos_gain.set_range(self.fourier_cam.gain.range)
 
         self.center_wavelength.connect_to_hardware(
             read_func=self.get_center_wavelength,
@@ -146,6 +163,12 @@ class DashboardModule(Module):
         self.cam.exposure.sigValueChanged.connect(self._on_exposure_changed)
         self._on_exposure_changed()  # seed with the already-current value
 
+        self.fourier_cam.exposure_time.sigValueChanged.connect(self._on_cmos_exposure_changed)
+        self._on_cmos_exposure_changed()  # seed with the already-current value
+
+        self.fourier_cam.gain.sigValueChanged.connect(self._on_cmos_gain_changed)
+        self._on_cmos_gain_changed()  # seed with the already-current value
+
         laser2.is_on.sigValueChanged.connect(self._on_laser2_on_changed)
         self._on_laser2_on_changed()  # seed with the already-current value
 
@@ -159,6 +182,14 @@ class DashboardModule(Module):
     @QtCore.Slot()
     def _on_exposure_changed(self):
         self.integration_time.setValue(self.cam.exposure.value())
+
+    @QtCore.Slot()
+    def _on_cmos_exposure_changed(self):
+        self.cmos_exposure_time.setValue(self.fourier_cam.exposure_time.value())
+
+    @QtCore.Slot()
+    def _on_cmos_gain_changed(self):
+        self.cmos_gain.setValue(self.fourier_cam.gain.value())
 
     @QtCore.Slot()
     def _on_laser2_on_changed(self):
@@ -211,7 +242,30 @@ class DashboardModule(Module):
 
     def get_integration_time(self):
         return self.cam._get_acquisition_timings()[0]
-    
+
+    def set_cmos_exposure_time(self, value_ms):
+        exposure = self.fourier_cam.exposure_time
+        exposure.write_to_device(value_ms)
+        # write_to_device alone doesn't refresh exposure.value() -- without this
+        # read-back, _on_cmos_exposure_changed never fires and the dashboard
+        # spinbox would silently keep showing the old value after a write.
+        exposure.trigger_read().wait(2.0)
+
+    def get_cmos_exposure_time(self):
+        return self.fourier_cam.exposure_time.value()
+
+    def set_cmos_gain(self, value):
+        # gain.range.max == gain.range.min means this camera doesn't support
+        # adjustable gain (see ThorlabsCS165HW.connect) -- its write_func was
+        # never wired to hardware, so writing would be a no-op at best.
+        gain = self.fourier_cam.gain
+        if gain.range.max > gain.range.min:
+            gain.write_to_device(value)
+            gain.trigger_read().wait(2.0)
+
+    def get_cmos_gain(self):
+        return self.fourier_cam.gain.value()
+
     def set_center_wavelength(self, wavelength):
         self.spec.host.SetWavelength(int(self.dev_id), float(wavelength / 1e-9))
         self.center_energy.trigger_read()

@@ -36,6 +36,8 @@ class DashboardView(TurboComponentView, Ui_DashboardWidget):
         SFT.connect_widget_to_param(self.CenterWavelength_DoubleSpinBox, component.center_wavelength)
         SFT.connect_widget_to_param(self.CenterEnergy_DoubleSpinBox, component.center_energy)
         SFT.connect_widget_to_param(self.IntegrationTime_DoubleSpinBox, component.integration_time)
+        SFT.connect_widget_to_param(self.CmosExposureTime_DoubleSpinBox, component.cmos_exposure_time)
+        SFT.connect_widget_to_param(self.CmosGain_DoubleSpinBox, component.cmos_gain)
         SFT.connect_widget_to_param(self.PiezoX_DoubleSpinBox, component.piezo_x)
         SFT.connect_widget_to_param(self.PiezoY_DoubleSpinBox, component.piezo_y)
         SFT.connect_widget_to_param(self.PiezoStep_DoubleSpinBox, component.piezo_step)
@@ -63,6 +65,8 @@ class DashboardView(TurboComponentView, Ui_DashboardWidget):
             self.CenterWavelength_DoubleSpinBox,
             self.CenterEnergy_DoubleSpinBox,
             self.IntegrationTime_DoubleSpinBox,
+            self.CmosExposureTime_DoubleSpinBox,
+            self.CmosGain_DoubleSpinBox,
             self.PiezoX_DoubleSpinBox,
             self.PiezoY_DoubleSpinBox,
             self.PiezoStep_DoubleSpinBox,
@@ -80,6 +84,7 @@ class DashboardView(TurboComponentView, Ui_DashboardWidget):
         group_boxes = [
             self.groupBox_2,  # Spectrometer
             self.groupBox_4,  # Detector
+            self.groupBox_7,  # Fourier CMOS
             self.groupBox_3,  # Piezo
             self.groupBox_6,  # Power Control
         ]
