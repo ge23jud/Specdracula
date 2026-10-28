@@ -244,6 +244,96 @@ class HelperFunctions():
             fh.write("\n".join(lines) + "\n")
 
 
+    def write_polarization_origin(
+        self,
+        date: dt.datetime,
+        temperature: float,
+        integration_time: float,
+        power: float,
+        center_wavelength: float,
+        dispersion_window: float,
+        entrance_slit_width: float,
+        exit_slit_width: float,
+        wavelength: np.ndarray,
+        angles: np.ndarray,
+        intensity: np.ndarray,
+        filepath: str,
+    ) -> None:
+        """
+        Write a polarization-resolved PL dataset to a .origin text file.
+
+        Same 9-line metadata header as `write_origin` (power in mW, measured
+        once for the whole series), but the per-column rows carry only the
+        rotation stage angle -- no per-spectrum excitation power.
+
+        intensity : np.ndarray, shape (n, m)
+            Row i, column j contains the counts for wavelength[i] at angles[j].
+        """
+        wavelength = np.asarray(wavelength)
+        angles = np.atleast_1d(np.asarray(angles, dtype=float))
+        intensity = np.asarray(intensity)
+
+        n = wavelength.shape[0]
+        m = angles.shape[0]
+
+        if intensity.shape != (n, m):
+            raise ValueError(
+                f"intensity must have shape (n, m) = ({n}, {m}), "
+                f"got {intensity.shape}"
+            )
+
+        def _fmt_ev(value: float, decimals: int = 3) -> str:
+            factor = 10 ** decimals
+            return f"{math.floor(value * factor) / factor:.{decimals}f}"
+
+        date_str = (
+            f"{date.strftime('%A, %B')} {date.day}, {date.year}, "
+            f"{date.hour % 12 or 12}:{date.strftime('%M')} "
+            f"{'AM' if date.hour < 12 else 'PM'}"
+        )
+        center_ev = self.wavelength_energy_converter(center_wavelength)
+        window_ev = abs(
+            self.wavelength_energy_converter(center_wavelength - dispersion_window / 2.0)
+            - self.wavelength_energy_converter(center_wavelength + dispersion_window / 2.0)
+        )
+
+        header_pad = "\t" * (m - 1)
+        blank_pad = "\t" * m
+        col_headers = "\t".join(["Polarization spectrum "] * m)
+        col_units = "\t".join([f"(Counts/{integration_time:.3f}s)"] * m)
+        angle_vals = "\t".join(f"{a:g}" for a in angles)
+
+        lines: list[str] = []
+        lines.append(f"Date:\t{date_str}{header_pad}")
+        lines.append(f"Measurement type:\tPolarization{header_pad}")
+        lines.append(f"Temperature: \t{temperature:.3f} K{header_pad}")
+        lines.append(f"Integration time:\t{integration_time:.3f} s{header_pad}")
+        lines.append(f"Excitation power:\t{power:.4f} mW{header_pad}")
+        lines.append(
+            f"Center wavelength\t{center_wavelength:.3f} nm"
+            f" / {_fmt_ev(center_ev)} eV{header_pad}"
+        )
+        lines.append(
+            f"Dispersion window:\t{dispersion_window:.3f} nm"
+            f" / {_fmt_ev(window_ev)} eV{header_pad}"
+        )
+        lines.append(f"Entrance slit width:\t{entrance_slit_width:.3f} mm{header_pad}")
+        lines.append(f"Exit slit width:\t{exit_slit_width:.3f} mm{header_pad}")
+        lines.append(f" {blank_pad}")
+
+        lines.append(f"Wavelength \t{col_headers}")
+        lines.append(f"(nm)\t{col_units}")
+        lines.append(f"Polarization angle (°)\t{angle_vals}")
+
+        for i in range(n):
+            wl = f"{wavelength[i]:.9f}"
+            counts = "\t".join(str(int(round(intensity[i, j]))) for j in range(m))
+            lines.append(f"{wl}\t{counts}")
+
+        with open(filepath, "w", newline="\r\n", encoding="latin-1") as fh:
+            fh.write("\n".join(lines) + "\n")
+
+
     def write_fourier_powerseries_origin(
         self,
         date: dt.datetime,

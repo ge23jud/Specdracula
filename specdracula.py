@@ -30,6 +30,7 @@ from MeasurementComponents.Map import MapModule
 from MeasurementComponents.Spotsize import SpotsizeModule
 from MeasurementComponents.PowerCalibration import PowerCalibrationModule
 from MeasurementComponents.FourierCMOS import FourierCMOSModule
+from MeasurementComponents.Polarization import PolarizationModule
 
 
 def set_initial(param, value):
@@ -63,6 +64,7 @@ class SpecDracula(SFT.TurboControl):
         spotsize = SpotsizeModule(name="Spotsize")
         powercalibration = PowerCalibrationModule(name="Power Calibration")
         fourier_cmos = FourierCMOSModule(name="Fourier Imaging")
+        polarization = PolarizationModule(name="Polarization")
 
         # Powermeter setup
         power_meter = ThorlabsPowerMeterHW(name='PM100')
@@ -133,6 +135,13 @@ class SpecDracula(SFT.TurboControl):
         photoluminescence.hwp.setValue(hwp_motor)
         photoluminescence.powermeter.setValue(power_meter)
         photoluminescence.shutter.setValue(shutter)
+
+        polarization.camera.setValue(ccd_camera)
+        polarization.spectrograph.setValue(spec)
+        polarization.rotation_stage.setValue(rotation_stage)
+        polarization.powermeter.setValue(power_meter)
+        polarization.shutter.setValue(shutter)
+        polarization.status.setValue(status)
 
         dashboard.camera.setValue(ccd_camera)
         dashboard.fourier_camera.setValue(cmos_camera)
