@@ -20,6 +20,7 @@ from HardwareComponents.andor_camera import AndorCCDHW
 from HardwareComponents.andor_spec import AndorSpectrographHW
 from HardwareComponents.thorlabs_laser import ThorlabsKLSLaserHW
 from HardwareComponents.fourier_cmos import ThorlabsCS165HW
+from HardwareComponents.motorized_mirror import Picomotor8742HW
 from power_axis_adapters import HWPPowerAxisAdapter, LaserPowerAxisAdapter
 
 from MeasurementComponents.XYMeasurement import XYMeasurementModule
@@ -99,6 +100,16 @@ class SpecDracula(SFT.TurboControl):
         _temp = laser2.find_param_by_name('Serial number')
         set_initial(_temp, '56534954')  # KLS635 serial number
         #laser2.connect()
+
+        # Motorized mirror setup (Newport 8742 Picomotor controller)
+        motorized_mirror = Picomotor8742HW(name='Motorized Mirror')
+        _temp = motorized_mirror.find_param_by_name('Connection')
+        set_initial(_temp, '0')  # USB device index, or IP address / hostname for Ethernet
+        _temp = motorized_mirror.find_param_by_name('Horizontal axis')
+        set_initial(_temp, 3)  # 8742 motor output of the horizontal actuator
+        _temp = motorized_mirror.find_param_by_name('Vertical axis')
+        set_initial(_temp, 4)  # 8742 motor output of the vertical actuator
+        motorized_mirror.connect()  # USB needs the controller bound to WinUSB (Zadig)
 
         # Piezo setup
         piezo_stage = PiezoJenaNV40_HW(name='Piezo stage')
