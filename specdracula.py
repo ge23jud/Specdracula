@@ -32,6 +32,7 @@ from MeasurementComponents.Spotsize import SpotsizeModule
 from MeasurementComponents.PowerCalibration import PowerCalibrationModule
 from MeasurementComponents.FourierCMOS import FourierCMOSModule
 from MeasurementComponents.Polarization import PolarizationModule
+from MeasurementComponents.FourFPump import FourFPumpModule
 
 
 def set_initial(param, value):
@@ -66,6 +67,7 @@ class SpecDracula(SFT.TurboControl):
         powercalibration = PowerCalibrationModule(name="Power Calibration")
         fourier_cmos = FourierCMOSModule(name="Fourier Imaging")
         polarization = PolarizationModule(name="Polarization")
+        fourf_pump = FourFPumpModule(name="4F-Pump")
 
         # Powermeter setup
         power_meter = ThorlabsPowerMeterHW(name='PM100')
@@ -153,6 +155,13 @@ class SpecDracula(SFT.TurboControl):
         polarization.powermeter.setValue(power_meter)
         polarization.shutter.setValue(shutter)
         polarization.status.setValue(status)
+
+        fourf_pump.camera.setValue(ccd_camera)
+        fourf_pump.spectrograph.setValue(spec)
+        fourf_pump.mirror.setValue(motorized_mirror)
+        fourf_pump.powermeter.setValue(power_meter)
+        fourf_pump.shutter.setValue(shutter)
+        fourf_pump.status.setValue(status)
 
         dashboard.camera.setValue(ccd_camera)
         dashboard.fourier_camera.setValue(cmos_camera)

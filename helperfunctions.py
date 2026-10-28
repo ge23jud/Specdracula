@@ -334,6 +334,109 @@ class HelperFunctions():
             fh.write("\n".join(lines) + "\n")
 
 
+    def write_4fpump_origin(
+        self,
+        date: dt.datetime,
+        temperature: float,
+        integration_time: float,
+        power: float,
+        center_wavelength: float,
+        dispersion_window: float,
+        entrance_slit_width: float,
+        exit_slit_width: float,
+        wavelength: np.ndarray,
+        x_positions: np.ndarray,
+        y_positions: np.ndarray,
+        intensity: np.ndarray,
+        filepath: str,
+    ) -> None:
+        """
+        Write a 4F-pump dataset (spectra vs. motorized mirror position) to a
+        .origin text file.
+
+        Same 9-line metadata header as `write_polarization_origin` (power in mW,
+        measured once for the whole scan). Each spectrum column carries two
+        position rows: the mirror X and Y offset in Picomotor steps relative to
+        the scan centre.
+
+        x_positions, y_positions : np.ndarray, shape (m,)
+            Mirror offsets of column j.
+        intensity : np.ndarray, shape (n, m)
+            Row i, column j contains the counts for wavelength[i] at point j.
+        """
+        wavelength = np.asarray(wavelength)
+        x_positions = np.atleast_1d(np.asarray(x_positions))
+        y_positions = np.atleast_1d(np.asarray(y_positions))
+        intensity = np.asarray(intensity)
+
+        n = wavelength.shape[0]
+        m = x_positions.shape[0]
+
+        if y_positions.shape[0] != m:
+            raise ValueError(
+                f"x_positions and y_positions must have the same length, "
+                f"got {m} and {y_positions.shape[0]}"
+            )
+        if intensity.shape != (n, m):
+            raise ValueError(
+                f"intensity must have shape (n, m) = ({n}, {m}), "
+                f"got {intensity.shape}"
+            )
+
+        def _fmt_ev(value: float, decimals: int = 3) -> str:
+            factor = 10 ** decimals
+            return f"{math.floor(value * factor) / factor:.{decimals}f}"
+
+        date_str = (
+            f"{date.strftime('%A, %B')} {date.day}, {date.year}, "
+            f"{date.hour % 12 or 12}:{date.strftime('%M')} "
+            f"{'AM' if date.hour < 12 else 'PM'}"
+        )
+        center_ev = self.wavelength_energy_converter(center_wavelength)
+        window_ev = abs(
+            self.wavelength_energy_converter(center_wavelength - dispersion_window / 2.0)
+            - self.wavelength_energy_converter(center_wavelength + dispersion_window / 2.0)
+        )
+
+        header_pad = "\t" * (m - 1)
+        blank_pad = "\t" * m
+        col_headers = "\t".join(["4F-Pump spectrum "] * m)
+        col_units = "\t".join([f"(Counts/{integration_time:.3f}s)"] * m)
+        x_vals = "\t".join(f"{int(x)}" for x in x_positions)
+        y_vals = "\t".join(f"{int(y)}" for y in y_positions)
+
+        lines: list[str] = []
+        lines.append(f"Date:\t{date_str}{header_pad}")
+        lines.append(f"Measurement type:\t4F-Pump{header_pad}")
+        lines.append(f"Temperature: \t{temperature:.3f} K{header_pad}")
+        lines.append(f"Integration time:\t{integration_time:.3f} s{header_pad}")
+        lines.append(f"Excitation power:\t{power:.4f} mW{header_pad}")
+        lines.append(
+            f"Center wavelength\t{center_wavelength:.3f} nm"
+            f" / {_fmt_ev(center_ev)} eV{header_pad}"
+        )
+        lines.append(
+            f"Dispersion window:\t{dispersion_window:.3f} nm"
+            f" / {_fmt_ev(window_ev)} eV{header_pad}"
+        )
+        lines.append(f"Entrance slit width:\t{entrance_slit_width:.3f} mm{header_pad}")
+        lines.append(f"Exit slit width:\t{exit_slit_width:.3f} mm{header_pad}")
+        lines.append(f" {blank_pad}")
+
+        lines.append(f"Wavelength \t{col_headers}")
+        lines.append(f"(nm)\t{col_units}")
+        lines.append(f"Mirror X (steps)\t{x_vals}")
+        lines.append(f"Mirror Y (steps)\t{y_vals}")
+
+        for i in range(n):
+            wl = f"{wavelength[i]:.9f}"
+            counts = "\t".join(str(int(round(intensity[i, j]))) for j in range(m))
+            lines.append(f"{wl}\t{counts}")
+
+        with open(filepath, "w", newline="\r\n", encoding="latin-1") as fh:
+            fh.write("\n".join(lines) + "\n")
+
+
     def write_fourier_powerseries_origin(
         self,
         date: dt.datetime,
