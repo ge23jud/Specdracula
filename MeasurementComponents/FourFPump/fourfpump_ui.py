@@ -158,15 +158,38 @@ class Ui_FourFPumpWidget(object):
 
         self.gridLayout_scan.addWidget(self.NumMeasurements_Label, 4, 1, 1, 1)
 
+        self.label_window = QLabel(self.Scan)
+        self.label_window.setObjectName(u"label_window")
+
+        self.gridLayout_scan.addWidget(self.label_window, 5, 0, 1, 1)
+
+        self.WindowMin_DoubleSpinBox = QDoubleSpinBox(self.Scan)
+        self.WindowMin_DoubleSpinBox.setObjectName(u"WindowMin_DoubleSpinBox")
+        self.WindowMin_DoubleSpinBox.setMinimumSize(QSize(100, 25))
+        self.WindowMin_DoubleSpinBox.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
+        self.WindowMin_DoubleSpinBox.setDecimals(2)
+        self.WindowMin_DoubleSpinBox.setMaximum(10000.000000000000000)
+
+        self.gridLayout_scan.addWidget(self.WindowMin_DoubleSpinBox, 5, 1, 1, 1)
+
+        self.WindowMax_DoubleSpinBox = QDoubleSpinBox(self.Scan)
+        self.WindowMax_DoubleSpinBox.setObjectName(u"WindowMax_DoubleSpinBox")
+        self.WindowMax_DoubleSpinBox.setMinimumSize(QSize(100, 25))
+        self.WindowMax_DoubleSpinBox.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
+        self.WindowMax_DoubleSpinBox.setDecimals(2)
+        self.WindowMax_DoubleSpinBox.setMaximum(10000.000000000000000)
+
+        self.gridLayout_scan.addWidget(self.WindowMax_DoubleSpinBox, 5, 2, 1, 1)
+
         self.StartScan_PushButton = QPushButton(self.Scan)
         self.StartScan_PushButton.setObjectName(u"StartScan_PushButton")
 
-        self.gridLayout_scan.addWidget(self.StartScan_PushButton, 5, 1, 1, 1)
+        self.gridLayout_scan.addWidget(self.StartScan_PushButton, 6, 1, 1, 1)
 
         self.StopScan_PushButton = QPushButton(self.Scan)
         self.StopScan_PushButton.setObjectName(u"StopScan_PushButton")
 
-        self.gridLayout_scan.addWidget(self.StopScan_PushButton, 5, 2, 1, 1)
+        self.gridLayout_scan.addWidget(self.StopScan_PushButton, 6, 2, 1, 1)
 
 
         self.horizontalLayout_controls.addWidget(self.Scan)
@@ -268,6 +291,7 @@ class Ui_FourFPumpWidget(object):
         self.ReturnToCenter_CheckBox.setText(QCoreApplication.translate("FourFPumpWidget", u"Return to center", None))
         self.label_measurements.setText(QCoreApplication.translate("FourFPumpWidget", u"Measurements", None))
         self.NumMeasurements_Label.setText(QCoreApplication.translate("FourFPumpWidget", u"0", None))
+        self.label_window.setText(QCoreApplication.translate("FourFPumpWidget", u"Window (nm)", None))
         self.StartScan_PushButton.setText(QCoreApplication.translate("FourFPumpWidget", u"Start Scan", None))
         self.StopScan_PushButton.setText(QCoreApplication.translate("FourFPumpWidget", u"Stop Scan", None))
         self.Snapshot_PushButton.setText(QCoreApplication.translate("FourFPumpWidget", u"Snapshot", None))

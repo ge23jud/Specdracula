@@ -15,10 +15,15 @@ class FourFPumpModule(Module):
     current position: X and Y each run from -range to +range in steps of
     `step` (all in Picomotor steps). A full spectrum is taken at every point.
 
-    The scan is a unidirectional raster (every row is approached from -X),
-    because Picomotors are open loop and their step size depends on direction.
-    After the scan the mirror is moved back to the centre; due to the same
-    open-loop hysteresis this return is only approximate.
+    The scan is a serpentine: rows run alternately -X -> +X and +X -> -X, so
+    no time is spent on flyback moves. Picomotors are open loop and their step
+    size depends on direction, so odd rows may be shifted slightly in X
+    relative to even rows. After the scan the mirror is moved back to the
+    centre; due to the same open-loop hysteresis this return is only approximate.
+
+    The map shows, per point, the maximum counts within the spectral window
+    [Window Min, Window Max] (nm). If Window Max <= Window Min the whole
+    spectrum is used.
 
     Excitation power is read once per scan and only stored in the header.
     """
@@ -61,8 +66,14 @@ class FourFPumpModule(Module):
     intensity_counts_series = SFT.ObjectParameter("Intensities for 4F-Pump Scan", dtype=np.ndarray, value=None, readonly=True)
     spectra_grid = SFT.ObjectParameter("4F-Pump Spectra Grid", dtype=np.ndarray, value=None, readonly=True,
                                        doc="Shape (nx, ny, pixels); NaN where not measured yet")
-    map_data = SFT.ObjectParameter("Integrated Intensity Map", dtype=np.ndarray, value=None, readonly=True,
-                                   doc="Shape (nx, ny): summed counts per point; NaN where not measured yet")
+    window_min_nm = SFT.ObjectParameter("Window Min", dtype=float, value=0.0, unit="nm",
+                                        range=SFT.MinMaxRangeType(min=0.0, max=10000.0, decimals=2),
+                                        doc="Lower wavelength bound of the spectral window used for the map")
+    window_max_nm = SFT.ObjectParameter("Window Max", dtype=float, value=0.0, unit="nm",
+                                        range=SFT.MinMaxRangeType(min=0.0, max=10000.0, decimals=2),
+                                        doc="Upper wavelength bound of the spectral window used for the map")
+    map_data = SFT.ObjectParameter("Window Max Intensity Map", dtype=np.ndarray, value=None, readonly=True,
+                                   doc="Shape (nx, ny): max counts within the spectral window per point; NaN where not measured yet")
     measurement_running = SFT.ObjectParameter('Measurement Running', dtype=bool, value=False, readonly=True)
     total_measurement_steps = SFT.ObjectParameter('Total Measurement Steps', dtype=int, value=0, readonly=True)
     completed_measurement_steps = SFT.ObjectParameter('Completed Measurement Steps', dtype=int, value=0, readonly=True)
@@ -98,6 +109,8 @@ class FourFPumpModule(Module):
 
         self.wavelength_nm.sigValueChanged.connect(self._update_energy_array)
         self.spectrograph.sigValueChanged.connect(self._on_spectrograph_set)
+        self.window_min_nm.sigValueChanged.connect(self._recompute_map)
+        self.window_max_nm.sigValueChanged.connect(self._recompute_map)
 
         self.update_no_measurements()
 
@@ -151,6 +164,30 @@ class FourFPumpModule(Module):
         if shutter is None:
             return True
         return bool(shutter.device.get_shutter_state(shutter.shutter_id.value()))
+
+
+    def _window_mask(self, no_pixels):
+        """Boolean pixel mask of the spectral window; all pixels if the window is unset."""
+        wavelengths = self.wavelength_nm.value()
+        lo, hi = self.window_min_nm.value(), self.window_max_nm.value()
+        if hi <= lo or wavelengths is None or len(wavelengths) != no_pixels:
+            return np.ones(no_pixels, dtype=bool)
+        return (wavelengths >= lo) & (wavelengths <= hi)
+
+    def _window_max_map(self, grid):
+        """Max counts within the spectral window for every grid point; NaN where not measured."""
+        window = grid[:, :, self._window_mask(grid.shape[2])]
+        result = np.full(grid.shape[:2], np.nan)
+        measured = np.isfinite(window).any(axis=2)
+        if window.shape[2] > 0 and measured.any():
+            result[measured] = np.nanmax(window[measured], axis=1)
+        return result
+
+    @QtCore.Slot()
+    def _recompute_map(self):
+        grid = self.spectra_grid.value()
+        if grid is not None:
+            self.map_data.setValue(self._window_max_map(grid))
 
 
     def _get_mirror(self):
@@ -271,16 +308,18 @@ class FourFPumpModule(Module):
 
         no_pixels = spec.detector_pixels.value()
         grid = np.full((nx, ny, no_pixels), np.nan)
-        map_data = np.full((nx, ny), np.nan)
         self.spectra_grid.setValue(grid.copy())
-        self.map_data.setValue(map_data.copy())
+        self.map_data.setValue(np.full((nx, ny), np.nan))
 
         measured = []  # (ix, iy) in acquisition order, for the file columns
         try:
             for iy, dy in enumerate(y_offsets):
                 if self._interrupted:
                     break
-                for ix, dx in enumerate(x_offsets):
+                # serpentine: odd rows run from +X back to -X
+                x_order = range(nx) if iy % 2 == 0 else range(nx - 1, -1, -1)
+                for ix in x_order:
+                    dx = x_offsets[ix]
                     if self._interrupted:
                         break
                     self._move_mirror(mirror, center_x + dx, center_y + dy)
@@ -295,10 +334,9 @@ class FourFPumpModule(Module):
                         spectrum = spectrum.reshape(-1, no_pixels).mean(axis=0)
                     spectrum = spectrum.flatten()
                     grid[ix, iy, :] = spectrum
-                    map_data[ix, iy] = float(np.sum(spectrum))
                     measured.append((ix, iy))
                     self.spectra_grid.setValue(grid.copy())
-                    self.map_data.setValue(map_data.copy())
+                    self.map_data.setValue(self._window_max_map(grid))
                     self.completed_measurement_steps.setValue(len(measured))
         finally:
             if self.return_to_center.value():
@@ -354,6 +392,10 @@ class FourFPumpModule(Module):
         wavelengths = self.wavelength_nm.value()
         energies = HelperFunctions().wavelength_energy_converter(wavelengths)
         self.energy_ev.setValue(energies)
+        # default the map window to the full spectrum once a calibration is known
+        if self.window_max_nm.value() <= self.window_min_nm.value():
+            self.window_min_nm.setValue(float(np.min(wavelengths)))
+            self.window_max_nm.setValue(float(np.max(wavelengths)))
 
 
     def update_save_string(self, integration_time, center_energy):

@@ -231,14 +231,59 @@
            </property>
           </widget>
          </item>
+         <item row="5" column="0">
+          <widget class="QLabel" name="label_window">
+           <property name="text">
+            <string>Window (nm)</string>
+           </property>
+          </widget>
+         </item>
          <item row="5" column="1">
+          <widget class="QDoubleSpinBox" name="WindowMin_DoubleSpinBox">
+           <property name="minimumSize">
+            <size>
+             <width>100</width>
+             <height>25</height>
+            </size>
+           </property>
+           <property name="buttonSymbols">
+            <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+           </property>
+           <property name="decimals">
+            <number>2</number>
+           </property>
+           <property name="maximum">
+            <double>10000.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="2">
+          <widget class="QDoubleSpinBox" name="WindowMax_DoubleSpinBox">
+           <property name="minimumSize">
+            <size>
+             <width>100</width>
+             <height>25</height>
+            </size>
+           </property>
+           <property name="buttonSymbols">
+            <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+           </property>
+           <property name="decimals">
+            <number>2</number>
+           </property>
+           <property name="maximum">
+            <double>10000.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="1">
           <widget class="QPushButton" name="StartScan_PushButton">
            <property name="text">
             <string>Start Scan</string>
            </property>
           </widget>
          </item>
-         <item row="5" column="2">
+         <item row="6" column="2">
           <widget class="QPushButton" name="StopScan_PushButton">
            <property name="text">
             <string>Stop Scan</string>

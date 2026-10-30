@@ -7,13 +7,16 @@ from PySide6 import QtCore, QtWidgets
 
 from .fourfpump_ui import Ui_FourFPumpWidget
 from MeasurementComponents.Photoluminescence.widget import _format_duration
+from helperfunctions import HelperFunctions
 
 
 class FourFPumpView(TurboComponentView, Ui_FourFPumpWidget):
-    """Spectrum plot (left) and integrated-intensity map vs. mirror offset (right).
+    """Spectrum plot (left) and window-max intensity map vs. mirror offset (right).
 
     During a scan the spectrum plot shows the latest point. Afterwards (or
     during), clicking a pixel of the map shows the spectrum measured there.
+    The shaded region on the spectrum plot is the spectral window used for
+    the map; it can be dragged or set via the Window spinboxes.
     """
 
     def __init__(self, component, parent=None):
@@ -30,6 +33,8 @@ class FourFPumpView(TurboComponentView, Ui_FourFPumpWidget):
         SFT.connect_widget_to_param(self.YStep_SpinBox, component.y_step)
         SFT.connect_widget_to_param(self.SettleTime_DoubleSpinBox, component.settle_time)
         SFT.connect_widget_to_param(self.ReturnToCenter_CheckBox, component.return_to_center)
+        SFT.connect_widget_to_param(self.WindowMin_DoubleSpinBox, component.window_min_nm)
+        SFT.connect_widget_to_param(self.WindowMax_DoubleSpinBox, component.window_max_nm)
         SFT.connect_widget_to_param(self.xlabel_ComboBox, component.x_label)
         SFT.connect_widget_to_param(self.yscale_ComboBox, component.y_scale)
         SFT.connect_widget_to_param(self.Directory_LineEdit, component.save_directory)
@@ -44,6 +49,9 @@ class FourFPumpView(TurboComponentView, Ui_FourFPumpWidget):
 
         component.n_measurements.sigValueChanged.connect(self.update_nummeasurements_label)
         component.x_label.sigValueChanged.connect(self._on_xlabel_changed)
+        component.x_label.sigValueChanged.connect(self._update_window_region)
+        component.window_min_nm.sigValueChanged.connect(self._update_window_region)
+        component.window_max_nm.sigValueChanged.connect(self._update_window_region)
         component.y_scale.sigValueChanged.connect(self._on_yscale_changed)
         component.intensity_counts.sigValueChanged.connect(self._update_plot_single)
         component.intensity_counts_series.sigValueChanged.connect(self._update_plot_scan)
@@ -58,6 +66,7 @@ class FourFPumpView(TurboComponentView, Ui_FourFPumpWidget):
         self._eta_timer.timeout.connect(self._tick_eta)
 
         self.update_nummeasurements_label()
+        self._update_window_region()
 
 
     def replace_imageview_with_plotitem(self):
@@ -79,6 +88,11 @@ class FourFPumpView(TurboComponentView, Ui_FourFPumpWidget):
         self.plot_widget.showGrid(x=True, y=True, alpha=0.2)
         self.plot_widget.getPlotItem().layout.setContentsMargins(10, 0, 0, 20)
         self.spectrum_plotDataItem = self.plot_widget.plot([], [])
+
+        self.window_region = pg.LinearRegionItem(brush=pg.mkBrush(255, 165, 0, 40))
+        self.window_region.setZValue(-10)
+        self.plot_widget.getPlotItem().addItem(self.window_region, ignoreBounds=True)
+        self.window_region.sigRegionChangeFinished.connect(self._on_window_region_dragged)
 
     def setup_map(self):
         self.map_plot_item = self.img_view.getView()
@@ -115,6 +129,38 @@ class FourFPumpView(TurboComponentView, Ui_FourFPumpWidget):
     def _on_yscale_changed(self):
         self.plot_widget.setLogMode(y=self.component.y_scale.value() == "Logarithmic")
 
+
+    def _energy_axis(self):
+        return self.component.x_label.value() != "Wavelength"
+
+    @QtCore.Slot()
+    def _update_window_region(self):
+        """Show the spectral window (stored in nm) in the current x-axis unit."""
+        lo, hi = self.component.window_min_nm.value(), self.component.window_max_nm.value()
+        if hi <= lo or lo <= 0:
+            self.window_region.hide()
+            return
+        if self._energy_axis():
+            lo, hi = HelperFunctions().wavelength_energy_converter(np.array([hi, lo]))
+        self.window_region.blockSignals(True)
+        self.window_region.setRegion((lo, hi))
+        self.window_region.blockSignals(False)
+        self.window_region.show()
+
+    @QtCore.Slot()
+    def _on_window_region_dragged(self):
+        lo, hi = self.window_region.getRegion()
+        if self._energy_axis():
+            if lo <= 0:
+                return
+            lo, hi = HelperFunctions().wavelength_energy_converter(np.array([hi, lo]))
+        # set max first if the window moves up, so min < max holds in between
+        if lo >= self.component.window_max_nm.value():
+            self.component.window_max_nm.setValue(float(hi))
+            self.component.window_min_nm.setValue(float(lo))
+        else:
+            self.component.window_min_nm.setValue(float(lo))
+            self.component.window_max_nm.setValue(float(hi))
 
     def _show_spectrum(self, Y, title=None):
         X = self._x_data()
